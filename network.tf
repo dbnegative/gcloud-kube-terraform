@@ -1,12 +1,16 @@
 resource "google_compute_network" "default" {
-  name       = "${var.network.name}"
+  name       = "${var.network["name"]}"
 }
 
 resource "google_compute_subnetwork" "default-eu-west1" {
   name          = "default-${var.region}"
-  ip_cidr_range = "${var.network.iprange}"
+  ip_cidr_range = "${var.network["iprange"]}"
   network       = "${google_compute_network.default.self_link}"
   region        = "${var.region}"
+}
+
+resource "google_compute_address" "default" {
+  name = "${var.network["name"]}"
 }
 
 resource "google_compute_firewall" "kube-allow-icmp" {
