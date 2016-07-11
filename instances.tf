@@ -9,9 +9,9 @@ resource "google_compute_instance" "etcd-cluster" {
   count = 3
 
   network_interface {
-      network = "${google_compute_network.default.name}"
+      #network = "${google_compute_network.default.name}"
+      subnetwork = "${google_compute_subnetwork.default.name}"
        access_config {
-       nat_ip = "10.240.0.1${count.index}"
     }
   }
   
@@ -29,9 +29,9 @@ resource "google_compute_instance" "controller-cluster" {
   count = 3
 
   network_interface {
-      network = "${google_compute_network.default.name}"
+      #network = "${google_compute_network.default.name}"
+      subnetwork = "${google_compute_subnetwork.default.name}"
        access_config {
-       nat_ip = "10.240.0.2${count.index}"
     }
   }
   
@@ -46,12 +46,12 @@ resource "google_compute_instance" "worker-cluster" {
       image = "${var.disk["image"]}"
       size = 200
   }
-  count = 3
+  count = 2
 
   network_interface {
-      network = "${google_compute_network.default.name}"
+      #network = "${google_compute_network.default.name}"
+       subnetwork = "${google_compute_subnetwork.default.name}"
        access_config {
-       nat_ip = "10.240.0.3${count.index}"
     }
   }
   

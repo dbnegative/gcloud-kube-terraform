@@ -2,7 +2,7 @@ resource "google_compute_network" "default" {
   name       = "${var.network["name"]}"
 }
 
-resource "google_compute_subnetwork" "default-eu-west1" {
+resource "google_compute_subnetwork" "default" {
   name          = "default-${var.region}"
   ip_cidr_range = "${var.network["iprange"]}"
   network       = "${google_compute_network.default.self_link}"
