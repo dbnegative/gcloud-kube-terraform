@@ -7,4 +7,12 @@ Requires the following:
 * Google Cloud SDK
 * Fully functioning service account creds
 
+ToDo:
+* Wrapper script
+* Better SSL cert generation
+* Terraform state in GCS
+* CircleCi intergration
+* Terraform modules
+* Better exposed variables
+
 Only tested on OSX
