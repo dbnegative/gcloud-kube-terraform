@@ -1,3 +1,4 @@
+#------------------ ETCD -------------------------------------------
 resource "google_compute_instance" "etcd-cluster" {
   name         = "etcd${count.index}"
   machine_type = "${var.instance-type}"
@@ -16,7 +17,41 @@ resource "google_compute_instance" "etcd-cluster" {
   }
   
   can_ip_forward = true
+  
+   service_account {
+    scopes = ["compute-ro", "storage-ro"]
+  }
+  
+  provisioner "file" {
+        source = "scripts/etcd_configure.sh"
+        destination = "~/etcd_configure.sh"
+        
+        connection {
+        type = "ssh"
+        user = "shortjay"
+        private_key = "~/.ssh/google_compute_1"
+      }
+    }
+  
+  provisioner "remote-exec" {
+      connection {
+        type = "ssh"
+        user = "shortjay"
+        private_key = "~/.ssh/google_compute_1"
+    }
+      
+      inline = [
+          "gsutil cp gs://kube-ssl-certs/kubernetes.pem  ~/.",
+          "gsutil cp gs://kube-ssl-certs/kubernetes-key.pem  ~/.",
+          "gsutil cp gs://kube-ssl-certs/ca.pem  ~/.", 
+          "chmod 755 ~/etcd_configure.sh",
+          "~/etcd_configure.sh"
+      ]
+  }
+  
 }
+
+#---------------- CONTROLLER ----------------------------------------
 
 resource "google_compute_instance" "controller-cluster" {
   name         = "controller${count.index}"
@@ -36,8 +71,27 @@ resource "google_compute_instance" "controller-cluster" {
   }
   
   can_ip_forward = true
-}
+  
+  service_account {
+    scopes = ["compute-ro", "storage-ro"]
+  }
 
+  provisioner "remote-exec" {
+      connection {
+        type = "ssh"
+        user = "shortjay"
+        private_key = "~/.ssh/google_compute_1"
+    }
+      
+      inline = [
+          "gsutil cp gs://kube-ssl-certs/kubernetes.pem  ~/.",
+          "gsutil cp gs://kube-ssl-certs/kubernetes-key.pem  ~/.",
+          "gsutil cp gs://kube-ssl-certs/ca.pem  ~/."
+      ]
+  }
+}
+#----------------- WORKER ------------------------------------
+#
 resource "google_compute_instance" "worker-cluster" {
   name         = "worker${count.index}"
   machine_type = "${var.instance-type}"
@@ -56,4 +110,22 @@ resource "google_compute_instance" "worker-cluster" {
   }
   
   can_ip_forward = true
+  
+  service_account {
+    scopes = ["compute-ro", "storage-ro"]
+  }
+  
+  provisioner "remote-exec" {
+      connection {
+        type = "ssh"
+        user = "shortjay"
+        private_key = "~/.ssh/google_compute_1"
+    }
+      
+      inline = [
+          "gsutil cp gs://kube-ssl-certs/kubernetes.pem  ~/.",
+          "gsutil cp gs://kube-ssl-certs/kubernetes-key.pem  ~/.",
+          "gsutil cp gs://kube-ssl-certs/ca.pem  ~/."
+      ]
+  }
 }
