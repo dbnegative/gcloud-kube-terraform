@@ -77,7 +77,7 @@ resource "google_compute_instance" "controller-cluster" {
   }
   
   provisioner "file" {
-        source = "scripts/kubctrl_configure.sh"
+        source = "scripts/kubectrl_configure.sh"
         destination = "~/kubectrl_configure.sh"
         
         connection {
