@@ -75,6 +75,17 @@ resource "google_compute_instance" "controller-cluster" {
   service_account {
     scopes = ["compute-ro", "storage-ro"]
   }
+  
+  provisioner "file" {
+        source = "scripts/kubctrl_configure.sh"
+        destination = "~/kubectrl_configure.sh"
+        
+        connection {
+        type = "ssh"
+        user = "shortjay"
+        private_key = "~/.ssh/google_compute_1"
+      }
+    }
 
   provisioner "remote-exec" {
       connection {
@@ -86,7 +97,9 @@ resource "google_compute_instance" "controller-cluster" {
       inline = [
           "gsutil cp gs://kube-ssl-certs/kubernetes.pem  ~/.",
           "gsutil cp gs://kube-ssl-certs/kubernetes-key.pem  ~/.",
-          "gsutil cp gs://kube-ssl-certs/ca.pem  ~/."
+          "gsutil cp gs://kube-ssl-certs/ca.pem  ~/.",
+          "chmod 755 ~/kubectrl_configure.sh",
+          "~/kubectrl_configure.sh"
       ]
   }
 }
