@@ -14,8 +14,9 @@ Requires the following:
 * Fully functioning service account creds
 
 ToDo:
-* Wrapper script
-* Better SSL cert generation
+* ~~Wrapper script~~ - setup.sh now runs and provisons with terraform/ansible
+* ~~Better SSL cert generation~~ - setup.sh now creates and syncs certs
+* MD5 hash check on certs to reduce provisioning time.
 * Terraform state in GCS
 * CircleCi intergration
 * Terraform modules
