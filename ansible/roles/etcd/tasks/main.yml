@@ -10,9 +10,13 @@
 - name: Download etcd
   get_url: url=https://github.com/coreos/etcd/releases/download/v3.0.1/etcd-v3.0.1-linux-amd64.tar.gz dest=/tmp/etcd.tar.gz mode=0777
 
+- stat: path=/tmp/etcd-v3.0.1-linux-amd64
+  register: e
+
 - name: Untar etcd.tar.gz
   become: true
   command: "tar xvfz /tmp/etcd.tar.gz -C /tmp/" 
+  when: e.stat.isdir is not defined and e.stat.isdir == false
 
 - name: Copy etcd binarys into /usr/bin
   become: true
@@ -20,7 +24,7 @@
 
 - name: Copy SSL certs into dircetory   
   become: true
-  shell: "mv /ssl/*.pem /etc/etcd/."
+  shell: "cp /ssl/*.pem /etc/etcd/."
 
 - name: Get internal ip
   uri: 
@@ -39,9 +43,13 @@
   notify: 
    - restart etcd
 
+- stat: path=/etc/systemd/system/etcd.service
+  register: es
+
 - name: Reload daemon
   become: true
   shell: "systemctl daemon-reload"
+  when: es.stat.exists == false 
 
 - name: Enable etcd service
   become: true

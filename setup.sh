@@ -44,7 +44,7 @@ KUBERNETES_PUBLIC_IP_ADDRESS=$(gcloud compute addresses describe kubernetes \
 cd ssl 
 
 # copy over template
-sudo cp kubernetes-csr.json.tmpl kubernetes-csr.json
+cp kubernetes-csr.json.tmpl kubernetes-csr.json
 
 #Add ip's' to the kubernetes csr config file assumes terraform was successful
 sed -i "s/ETCD0IP/${ETCD0_IP}/g" kubernetes-csr.json
@@ -79,6 +79,7 @@ cp ../ssl/kubernetes-key.pem roles/common/files/
 cp ../ssl/ca.pem roles/common/files/
 
 #Get Nat IP's of all hosts
+echo "Collecting node IP's from gcloud'"
 ETCD0_NAT_IP=`gcloud compute instances list etcd0 --format=yaml | grep "  natIP:" | cut -c 12-100`
 ETCD1_NAT_IP=`gcloud compute instances list etcd1 --format=yaml | grep "  natIP:" | cut -c 12-100`
 ETCD2_NAT_IP=`gcloud compute instances list etcd2 --format=yaml | grep "  natIP:" | cut -c 12-100`
@@ -99,6 +100,7 @@ sed -i "s/WORKER0IP/${WORKER0_NAT_IP}/g" gcehosts
 sed -i "s/WORKER1IP/${WORKER1_NAT_IP}/g" gcehosts
 
 #Export IP's' to vars file
+echo "Exporting IP's to Ansible vars'"
 echo "
 etcd:
   etcd0: $ETCD0_IP
@@ -118,5 +120,12 @@ ansible_connection: ssh
 ansible_ssh_user: shortjay
 " > group_vars/all
 
+echo "Sleeping 10s, waiting for nodes to be ready"
+sleep 10
+
 #configure nodes
+echo "Starting Ansible"
 export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1
+
+#clean up
+rm group_vars/all
