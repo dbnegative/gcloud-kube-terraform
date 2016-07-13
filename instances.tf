@@ -12,7 +12,7 @@ resource "google_compute_instance" "etcd-cluster" {
   network_interface {
       #network = "${google_compute_network.default.name}"
       subnetwork = "${google_compute_subnetwork.default.name}"
-       access_config {
+      access_config {
     }
   }
   
@@ -66,7 +66,7 @@ resource "google_compute_instance" "controller-cluster" {
   network_interface {
       #network = "${google_compute_network.default.name}"
       subnetwork = "${google_compute_subnetwork.default.name}"
-       access_config {
+      access_config {
     }
   }
   
