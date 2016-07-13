@@ -2,3 +2,8 @@
   remote_user: root
   roles:
     - { role: common, tags: common }            
+
+- hosts: etcd
+  remote_user: root
+  roles:
+    - { role: etcd, tags: etcd }

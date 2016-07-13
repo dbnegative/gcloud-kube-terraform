@@ -1,0 +1,52 @@
+- name: Stop if active etcd
+  become: true
+  ignore_errors: yes
+  service: name=etcd state=stopped
+
+- name: Create etcd dir
+  become: true
+  file: path=/etc/etcd/ state=directory
+
+- name: Download etcd
+  get_url: url=https://github.com/coreos/etcd/releases/download/v3.0.1/etcd-v3.0.1-linux-amd64.tar.gz dest=/tmp/etcd.tar.gz mode=0777
+
+- name: Untar etcd.tar.gz
+  become: true
+  command: "tar xvfz /tmp/etcd.tar.gz -C /tmp/" 
+
+- name: Copy etcd binarys into /usr/bin
+  become: true
+  shell: "cp /tmp/etcd-v3.0.1-linux-amd64/etcd* /usr/bin/"
+
+- name: Copy SSL certs into dircetory   
+  become: true
+  shell: "mv /ssl/*.pem /etc/etcd/."
+
+- name: Get internal ip
+  uri: 
+   url: http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip 
+   HEADER_Metadata-Flavor: Google 
+   method: GET
+   return_content: yes
+  register: internal_ip
+
+- name: output rest data
+  debug: msg="{{ internal_ip }}"
+
+- name: Copy over etcd.service
+  become: true
+  template: src=../files/etcd.service.j2 dest=/etc/systemd/system/etcd.service 
+  notify: 
+   - restart etcd
+
+- name: Reload daemon
+  become: true
+  shell: "systemctl daemon-reload"
+
+- name: Enable etcd service
+  become: true
+  shell: "systemctl enable etcd"
+
+- name: Start etcd
+  become: true
+  service: name=etcd state=started

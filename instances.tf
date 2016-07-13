@@ -21,7 +21,7 @@ resource "google_compute_instance" "etcd-cluster" {
    service_account {
     scopes = ["compute-ro", "storage-ro"]
   }
-  
+/*  
   provisioner "file" {
         source = "scripts/etcd_configure.sh"
         destination = "~/etcd_configure.sh"
@@ -48,7 +48,7 @@ resource "google_compute_instance" "etcd-cluster" {
           "~/etcd_configure.sh"
       ]
   }
-  
+  */
 }
 
 #---------------- CONTROLLER ----------------------------------------

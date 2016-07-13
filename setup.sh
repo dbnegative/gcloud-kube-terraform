@@ -23,6 +23,7 @@ then
 	terraform plan > plannedchanges.log
 
 	echo "Running Terraform Apply\n"
+  terraform apply
 else
 	echo "Google service credentials missing, cannot find account.json"
 fi
@@ -57,9 +58,7 @@ sed -i "s/WORKER1IP/${WORKER1_IP}/g" kubernetes-csr.json
 sed -i "s/KUBERNETES_PUBLIC_IP/${KUBERNETES_PUBLIC_IP_ADDRESS}/g" kubernetes-csr.json
 
 #Generate kube cert
-
-if [ ! -f kubernetes.pem ]
-then
+#TODO run only when md5 hash changes
 echo "Generatining kubernetes cert and key"
 cfssl gencert \
   -ca=ca.pem \
@@ -67,7 +66,6 @@ cfssl gencert \
   -config=ca-config.json \
   -profile=kubernetes \
   kubernetes-csr.json | cfssljson -bare kubernetes
-fi
 
 #Change to ansible workdir
 cd ../ansible
@@ -99,6 +97,26 @@ sed -i "s/CTRL1IP/${CTRL1_NAT_IP}/g" gcehosts
 sed -i "s/CTRL2IP/${CTRL2_NAT_IP}/g" gcehosts
 sed -i "s/WORKER0IP/${WORKER0_NAT_IP}/g" gcehosts
 sed -i "s/WORKER1IP/${WORKER1_NAT_IP}/g" gcehosts
+
+#Export IP's' to vars file
+echo "
+etcd:
+  etcd0: $ETCD0_IP
+  etcd1: $ETCD1_IP
+  etcd2: $ETCD2_IP
+
+ctrl:
+  ctrl0: $CTRL0_IP
+  ctrl1: $CTRL1_IP
+  ctrl2: $CTRL2_IP
+
+worker:
+  worker0: $WORKER0_IP
+  worker1: $WORKER1_IP
+
+ansible_connection: ssh 
+ansible_ssh_user: shortjay
+" > group_vars/all
 
 #configure nodes
 export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1

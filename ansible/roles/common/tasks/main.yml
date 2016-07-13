@@ -1,11 +1,23 @@
+- name: Make temp SSL Dir
+  become: true
+  file: path=/ssl/ state=directory mode=0777
+
 - name: Copy kubernetes.pem to nodes
   become: true
-  copy: src=../files/kubernetes.pem dest=/etc/etcd/ mode=0644
+  copy: src=../files/kubernetes.pem dest=/ssl/ mode=0644
   
 - name: Copy kubernetes-key.pem to nodes
   become: true
-  copy: src=../files/kubernetes-key.pem dest=/etc/etcd/ mode=0644
+  copy: src=../files/kubernetes-key.pem dest=/ssl/ mode=0644
   
 - name: Copy ca.pem tp nodes
-  copy: src=../files/ca.pem dest=/etc/etcd/ mode=0644
+  copy: src=../files/ca.pem dest=/ssl/ mode=0644
   become: true
+
+- name: Install pip
+  become: true
+  apt: pkg=python-pip state=present
+
+- name: Install httplib2
+  become: true
+  pip: name=httplib2
