@@ -1,0 +1,11 @@
+- name: Copy kubernetes.pem to nodes
+  become: true
+  copy: src=../files/kubernetes.pem dest=/etc/etcd/ mode=0644
+  
+- name: Copy kubernetes-key.pem to nodes
+  become: true
+  copy: src=../files/kubernetes-key.pem dest=/etc/etcd/ mode=0644
+  
+- name: Copy ca.pem tp nodes
+  copy: src=../files/ca.pem dest=/etc/etcd/ mode=0644
+  become: true

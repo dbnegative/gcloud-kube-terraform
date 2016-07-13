@@ -1,0 +1,31 @@
+{
+  "CN": "kubernetes",
+  "hosts": [
+    "worker0",
+    "worker1",
+    "worker2",
+    "WORKERIP0",
+    "WORKERIP1",
+    "ETCDIP0",
+    "ETCDIP1",
+    "ETCDIP2",
+    "CTRLIP0",
+    "CTRLIP1",
+    "CTRLIP2",
+    "${KUBERNETES_PUBLIC_IP_ADDRESS}",
+    "127.0.0.1"
+  ],
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "Kubernetes",
+      "OU": "Cluster",
+      "ST": "Oregon"
+    }
+  ]
+}
