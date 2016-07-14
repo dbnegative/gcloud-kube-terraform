@@ -60,3 +60,10 @@
 - name: Start etcd
   become: true
   service: name=etcd state=started
+
+- name: Check Status
+  shell: "etcdctl --ca-file=/etc/etcd/ca.pem cluster-health"
+  register: etcd_status
+
+- name: Cluster - etcd status
+  debug: msg=etcd_status
