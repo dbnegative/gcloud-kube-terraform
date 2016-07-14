@@ -19,16 +19,22 @@
   tags:
     - kubectl
 
+- name: Check if API server is installed
+  stat: path=/etc/systemd/system/kube-apiserver.service
+  register: apiserver
+
 - name: Check Status
   become: true
   shell: "kubectl get componentstatuses"
   register: kubectl_status
   ignore_errors: yes
+  when: apiserver.stat.exists == true
   tags:
     - debug
 
 - name: Cluster - kube controller status
   debug: msg={{ kubectl_status.stdout_lines }}
   ignore_errors: yes
+  when: apiserver.stat.exists == true
   tags:
     - debug
