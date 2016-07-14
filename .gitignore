@@ -7,3 +7,5 @@ account.json
 *.tfstate.backup
 plannedchanges.log
 *.json
+gcehosts*
+*csr.json
