@@ -52,7 +52,6 @@ resource "google_compute_firewall" "kube-allow-rdp" {
    source_ranges = ["0.0.0.0/0"] 
 }
 
-
 resource "google_compute_firewall" "kube-allow-ssh" {
   name    = "kubernetes-allow-ssh"
   network = "${google_compute_network.default.name}"

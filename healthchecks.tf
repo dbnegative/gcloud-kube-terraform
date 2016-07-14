@@ -5,7 +5,6 @@ resource "google_compute_http_health_check" "kube_apiserver_check" {
   port = 8080
 }
 
-
 resource "google_compute_target_pool" "kubernetes_pool" {
   name = "kubernetes-pool"
 
@@ -19,7 +18,6 @@ resource "google_compute_target_pool" "kubernetes_pool" {
     "${google_compute_http_health_check.kube_apiserver_check.name}",
   ]
 }
-
 
 resource "google_compute_forwarding_rule" "kubernetes_rule" {
   name       = "kubernetes-rule"

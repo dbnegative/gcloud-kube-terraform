@@ -24,7 +24,6 @@ resource "google_compute_instance" "etcd-cluster" {
 }
 
 #---------------- CONTROLLER ----------------------------------------
-
 resource "google_compute_instance" "controller-cluster" {
   name         = "controller${count.index}"
   machine_type = "${var.instance-type}"
@@ -48,8 +47,8 @@ resource "google_compute_instance" "controller-cluster" {
     scopes = ["compute-ro", "storage-ro"]
   }
 }
+
 #----------------- WORKER ------------------------------------
-#
 resource "google_compute_instance" "worker-cluster" {
   name         = "worker${count.index}"
   machine_type = "${var.instance-type}"
