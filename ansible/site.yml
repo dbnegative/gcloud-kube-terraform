@@ -6,7 +6,7 @@
 - hosts: etcd
   remote_user: root
   roles:
-    - { role: etcd, tags: etcd }
+    - { role: etcd, tags: etcd debug }
 
 - hosts: controller
   remote_user: root
@@ -14,7 +14,7 @@
     - { role: kube-apiserver, tags: kube-apiserver }
     - { role: kube-controller, tags: kube-controller }
     - { role: kube-scheduler, tags: kube-scheduler }
-    - { role: kubectl, tags: kubectl }
+    - { role: kubectl, tags: kubectl debug }
 
 - hosts: worker
   remote_user: root

@@ -14,15 +14,26 @@ else
 	echo "CA exists..skipping\n----------"
 fi
 
-cd ..
+cd ../terraform
 
 #Check if credentials exist then run Terraform
 if [ -f account.json ]
 then
+    #Check what changes Terraform will make if any..
 	echo "Running Terraform Plan\n----------"
 	terraform plan > plannedchanges.log
-    echo "Running Terraform Apply\n----------"
-    terraform apply
+
+    #Check if anything has changed - not a great way to do this but since the resource order varies in 
+    #terraform plan we cannot use a hash     
+    grep "No changes. Infrastructure is up-to-date" plannedchanges.log > /dev/null
+    if [  $? -ne 0 ]
+    then
+        echo "Running Terraform Apply\n----------"
+        terraform apply
+        rm -rf ../ssl/kubernetes.pem
+    else
+        echo "No Changes detected\n----------"
+    fi    
 else
 	echo "Google service credentials missing, cannot find account.json"
     exit
@@ -41,7 +52,7 @@ KUBERNETES_PUBLIC_IP_ADDRESS=$(gcloud compute addresses describe kubernetes \
   --format 'value(address)')
 
 # cd to working dir
-cd ssl 
+cd ../ssl 
 
 # copy over template
 if [ ! -f kubernetes-csr.json ]
@@ -51,7 +62,7 @@ fi
 
 #Get MD5 Hash
 OLDHASH=`md5 kubernetes-csr.json`
-echo "OLDHASH: $OLDHASH"
+#echo "----------\nOLDHASH: $OLDHASH"
 
 #Add ip's' to the kubernetes csr config file assumes terraform was successful
 sed -i \'\' "s/ETCD0IP/${ETCD0_IP}/g; s/ETCD1IP/${ETCD1_IP}/g; s/ETCD2IP/${ETCD2_IP}/g" kubernetes-csr.json
@@ -61,7 +72,7 @@ sed -i \'\' "s/KUBERNETES_PUBLIC_IP/${KUBERNETES_PUBLIC_IP_ADDRESS}/g" kubernete
 
 #Get MD5 Hash
 NEWHASH=`md5 kubernetes-csr.json`
-echo "NEWHASH: $NEWHASH"
+#echo "NEWHASH: $NEWHASH\n----------"
 
 #Generate kube cert
 if [ "$OLDHASH" != "$NEWHASH" ] || [ ! -f kubernetes.pem ]
@@ -82,7 +93,7 @@ cd ../ansible
 if [ "$OLDHASH" != "$NEWHASH" ] || [ ! -f gchosts ]
 then
     #Copy template file
-    cp gcehosts.tmpl gcehosts
+    cp templates/gcehosts.tmpl gcehosts
 
     #Copy over ssl certs to be provisioned
     cp ../ssl/kubernetes.pem roles/common/files/
@@ -109,7 +120,7 @@ fi
 #Apply only if hash is different or var file is missing
 if [ "$OLDHASH" != "$NEWHASH" ] || [ ! -f group_vars/all ]
 then
-#Export IP's' to vars file
+#Export IP's' to vars file, this file is kept inline due to easy of setting vars without too much sed
 echo "Exporting IP's to Ansible vars\n----------'"
 echo "
 etcd:
@@ -132,6 +143,7 @@ ansible_ssh_user: shortjay
 fi
 
 #Wait for nodes to be ready
+#TODO: Have a better way of checking, perhaps this is only run the 1st time then creates a .lck file to skip this
 echo "Sleeping 10s, waiting for nodes to be ready\n----------"
 sleep 10
 
