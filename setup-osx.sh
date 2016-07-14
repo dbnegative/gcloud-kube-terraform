@@ -140,6 +140,8 @@ echo "Starting Ansible\n----------"
 export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1
 
 #clean up
-#TODO: this should only happen on success
 #TODO: clean up other files etc
-rm -rf group_vars/all
+if [ $? -eq 0 ]
+then
+    rm -rf group_vars/all
+fi
