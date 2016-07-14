@@ -4,32 +4,48 @@
     url: https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/linux/amd64/kubelet 
     dest: /usr/bin/kubelet
     mode: 0755
+  tags:
+    - kubelet
 
 - name: Create kubernetes dir
   become: true
   file: path=/var/lib/kubelet state=directory
+  tags:
+    - kubelet
 
 - name: Copy over kubeconfig
   become: true
-  template: src=../files/kubeconfig.j2 dest=/var/lib/kubelet/ 
+  template: src=../files/kubeconfig.j2 dest=/var/lib/kubelet/
+  tags:
+    - kubelet 
 
 - name: Copy over kubelet service config
   become: true
   template: src=../files/kubelet.service.j2 dest=/etc/systemd/system/kubelet.service
+  tags:
+    - kubelet
 
 - stat: path=/etc/systemd/system/kubelet.service
   register: ks
+  tags:
+    - kubelet
 
 - name: Reload daemon
   become: true
   shell: "systemctl daemon-reload"
-  when: ks.stat.exists == false 
+  when: ks.stat.exists == false
+  tags:
+    - kubelet
 
 - name: Enable kubelet service
   become: true
   shell: "systemctl enable kubelet"
   run_once: true
+  tags:
+    - kubelet
 
 - name: Start kubelet
   become: true
   service: name=kubelet state=started
+  tags:
+    - kubelet

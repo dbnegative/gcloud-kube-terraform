@@ -2,33 +2,49 @@
   become: true
   ignore_errors: yes
   service: name=etcd state=stopped
+  tags:
+    - etcd
 
 - name: Create etcd dir
   become: true
   file: path=/etc/etcd/ state=directory
+  tags:
+    - etcd
 
 - name: Download etcd
   get_url: url=https://github.com/coreos/etcd/releases/download/v3.0.1/etcd-v3.0.1-linux-amd64.tar.gz dest=/tmp/etcd.tar.gz mode=0777
+  tags:
+    - etcd
 
 - stat: path=/tmp/etcd-v3.0.1-linux-amd64
   register: e
+  tags:
+    - etcd
 
 - name: Untar etcd.tar.gz
   become: true
   command: "tar xvfz /tmp/etcd.tar.gz -C /tmp/" 
   when: e.stat.exists == false
+  tags:
+    - etcd
 
 - stat: path=/usr/bin/etcd
   register: etcbin
+  tags:
+    - etcd
 
 - name: Copy etcd binarys into /usr/bin
   become: true
   shell: "cp /tmp/etcd-v3.0.1-linux-amd64/etcd* /usr/bin/"
   when: etcbin.stat.exists == false
+  tags:
+    - etcd
 
 - name: Copy SSL certs into dircetory   
   become: true
   shell: "cp /ssl/*.pem /etc/etcd/."
+  tags:
+    - etcd
 
 - name: Get internal ip
   uri: 
@@ -37,33 +53,51 @@
    method: GET
    return_content: yes
   register: internal_ip
-  
+  tags:
+    - etcd
+
 - name: Copy over etcd.service
   become: true
   template: src=../files/etcd.service.j2 dest=/etc/systemd/system/etcd.service 
   notify: 
    - restart etcd
+  tags:
+    - etcd
 
 - stat: path=/etc/systemd/system/etcd.service
   register: es
+  tags:
+    - etcd
 
 - name: Reload daemon
   become: true
   shell: "systemctl daemon-reload"
-  when: es.stat.exists == false 
+  when: es.stat.exists == false
+  tags:
+    - etcd 
 
 - name: Enable etcd service
   become: true
   shell: "systemctl enable etcd"
   run_once: true
+  tags:
+    - etcd
 
 - name: Start etcd
   become: true
   service: name=etcd state=started
+  tags:
+    - etcd
 
 - name: Check Status
   shell: "etcdctl --ca-file=/etc/etcd/ca.pem cluster-health"
   register: etcd_status
+  tags:
+    - etcd
+    - debug
 
 - name: Cluster - etcd status
-  debug: msg=etcd_status
+  debug: msg={{ etcd_status.stdout_lines }}
+  tags:
+    - etcd
+    - debug

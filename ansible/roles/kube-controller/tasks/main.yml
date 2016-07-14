@@ -1,10 +1,14 @@
 - name: Create kubernetes dir
   become: true
   file: path=/var/lib/kubernetes state=directory
+  tags:
+    - kube-controller
 
 - name: Copy SSL certs into dircetory   
   become: true
   shell: "cp /ssl/*.pem /var/lib/kubernetes/."
+  tags:
+    - kube-controller
 
 - name: Download kube-controller-manager binary
   become: true
@@ -12,6 +16,8 @@
     url: https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/linux/amd64/kube-controller-manager 
     dest: /usr/bin/kube-controller-manager 
     mode: 0755
+  tags:
+    - kube-controller
 
 - name: Get internal ip
   uri: 
@@ -20,26 +26,38 @@
    method: GET
    return_content: yes
   register: internal_ip
+  tags:
+    - kube-controller
 
 - name: Copy over kube-controller-manager.service
   become: true
   template: src=../files/kube-controller-manager.service.j2 dest=/etc/systemd/system/kube-controller-manager.service 
   notify: 
    - restart kube-controller-manager.service
+  tags:
+    - kube-controller
 
 - stat: path=/etc/systemd/system/kube-controller-manager.service
   register: kcm
+  tags:
+    - kube-controller
 
 - name: Reload daemon
   become: true
   shell: "systemctl daemon-reload"
-  when: kcm.stat.exists == false 
+  when: kcm.stat.exists == false
+  tags:
+    - kube-controller 
 
 - name: Enable kube-controller-manager service
   become: true
   shell: "systemctl enable kube-controller-manager"
   run_once: true
+  tags:
+    - kube-controller
 
 - name: Start kube-controller-manager
   become: true
   service: name=kube-controller-manager state=started
+  tags:
+    - kube-controller
