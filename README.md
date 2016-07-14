@@ -1,4 +1,4 @@
-# Google Cloud + Kubernetes + Terraform 
+# Google Cloud + Kubernetes + Terraform + Ansible
  
 Automated provisioning of kubernetes based off https://github.com/kelseyhightower/kubernetes-the-hard-way
 
@@ -32,6 +32,9 @@ linux:
 * ~~Wrapper script~~ 
 * ~~Better SSL cert generation~~
 * ~~MD5 hash check on certs to reduce provisioning time.~~
+* Better Anisible module seperation i.e move ssl to own role
+* Remove debug output
+* Code Tidy
 * Terraform state in GCS
 * CircleCi intergration
 * Terraform modules
