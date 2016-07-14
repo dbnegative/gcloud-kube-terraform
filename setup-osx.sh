@@ -109,26 +109,26 @@ fi
 #Apply only if hash is different or var file is missing
 if [ "$OLDHASH" != "$NEWHASH" ] || [ ! -f group_vars/all ]
 then
-    #Export IP's' to vars file
-    echo "Exporting IP's to Ansible vars\n----------'"
-    echo "
-    etcd:
-        etcd0: $ETCD0_IP
-        etcd1: $ETCD1_IP
-        etcd2: $ETCD2_IP
+#Export IP's' to vars file
+echo "Exporting IP's to Ansible vars\n----------'"
+echo "
+etcd:
+  etcd0: $ETCD0_IP
+  etcd1: $ETCD1_IP
+  etcd2: $ETCD2_IP
 
-    ctrl:
-        ctrl0: $CTRL0_IP
-        ctrl1: $CTRL1_IP
-        ctrl2: $CTRL2_IP
+ctrl:
+  ctrl0: $CTRL0_IP
+  ctrl1: $CTRL1_IP
+  ctrl2: $CTRL2_IP
 
-    worker:
-        worker0: $WORKER0_IP
-        worker1: $WORKER1_IP
+worker:
+  worker0: $WORKER0_IP
+  worker1: $WORKER1_IP
 
-        ansible_connection: ssh 
-        ansible_ssh_user: shortjay
-    " > group_vars/all
+ansible_connection: ssh 
+ansible_ssh_user: shortjay
+" > group_vars/all
 fi
 
 #Wait for nodes to be ready
