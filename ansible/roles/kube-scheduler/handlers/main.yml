@@ -1,0 +1,3 @@
+- name: restart kube-scheduler
+  become: true
+  service: name=kube-scheduler state=restarted

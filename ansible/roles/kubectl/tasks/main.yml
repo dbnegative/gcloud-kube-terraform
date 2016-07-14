@@ -1,0 +1,14 @@
+- name: Create kubernetes dir
+  become: true
+  file: path=/var/lib/kubernetes state=directory
+
+- name: Copy SSL certs into dircetory   
+  become: true
+  shell: "cp /ssl/*.pem /var/lib/kubernetes/."
+
+- name: Download kubectl binary
+  become: true
+  get_url: 
+    url: https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/linux/amd64/kubectl 
+    dest: /usr/bin/kubectl
+    mode: 0755

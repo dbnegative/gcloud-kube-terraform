@@ -1,0 +1,37 @@
+- name: Download kube-scheduler binary
+  become: true
+  get_url: 
+    url: https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/linux/amd64/kube-scheduler 
+    dest: /usr/bin/kube-scheduler 
+    mode: 0755
+
+- name: Get internal ip
+  uri: 
+   url: http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip 
+   HEADER_Metadata-Flavor: Google 
+   method: GET
+   return_content: yes
+  register: internal_ip
+
+- name: Copy over kube-scheduler.service
+  become: true
+  template: src=../files/kube-scheduler.service.j2 dest=/etc/systemd/system/kube-scheduler.service 
+  notify: 
+   - restart kube-scheduler.service
+
+- stat: path=/etc/systemd/system/kube-scheduler.service
+  register: kss
+
+- name: Reload daemon
+  become: true
+  shell: "systemctl daemon-reload"
+  when: kss.stat.exists == false 
+
+- name: Enable kube-scheduler.service service
+  become: true
+  shell: "systemctl enable kube-scheduler.service"
+  run_once: true
+
+- name: Start kube-scheduler.service
+  become: true
+  service: name=kube-scheduler.service state=started

@@ -1,0 +1,27 @@
+- name: Download kube-proxy binary
+  become: true
+  get_url: 
+    url: https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/linux/amd64/kube-proxy 
+    dest: /usr/bin/kube-proxy
+    mode: 0755
+
+- name: Copy over kube-proxy service config
+  become: true
+  template: src=../files/kube-proxy.service.j2 dest=/etc/systemd/system/kube-proxy.service
+
+- stat: path=/etc/systemd/system/kube-proxy.service
+  register: kps
+
+- name: Reload daemon
+  become: true
+  shell: "systemctl daemon-reload"
+  when: kps.stat.exists == false 
+
+- name: Enable kube-proxy service
+  become: true
+  shell: "systemctl enable kube-proxy"
+  run_once: true
+
+- name: Start kube-proxy
+  become: true
+  service: name=kube-proxy state=started

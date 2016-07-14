@@ -1,0 +1,19 @@
+
+- name: Create CNI dir
+  become: true
+  file: path=/opt/cni state=directory
+
+- name: Download CNI
+  become: true
+  get_url: 
+    url: https://storage.googleapis.com/kubernetes-release/network-plugins/cni-c864f0e1ea73719b8f4582402b0847064f9883b0.tar.gz
+    dest: /tmp/cni.tar.gz
+    mode: 0755
+
+- stat: path=/opt/cni/
+  register: cni
+
+- name: Untar cni.tar.gz
+  become: true
+  command: "tar xvfz /tmp/cni.tar.gz -C /opt/cni" 
+  when: cni.stat.exists == false

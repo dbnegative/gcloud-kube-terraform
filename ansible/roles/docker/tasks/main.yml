@@ -1,0 +1,46 @@
+
+- name: Download docker binary
+  become: true
+  get_url: 
+    url: https://get.docker.com/builds/Linux/x86_64/docker-1.11.2.tgz 
+    dest: /tmp/docker-1.11.2.tgz
+    mode: 0755
+
+- stat: path=/tmp/docker/
+  register: dd
+
+- name: Untar docker-1.11.2.tgz
+  become: true
+  command: "tar xvfz /tmp/docker-1.11.2.tgz -C /tmp/" 
+  when: dd.stat.exists == false
+
+- stat: path=/usr/bin/docker
+  register: dockerbin
+
+- name: Copy docker binarys into /usr/bin
+  become: true
+  shell: "cp /tmp/docker/docker* /usr/bin/"
+  when: dockerbin.stat.exists == false
+
+- name: Copy over docker.service
+  become: true
+  template: src=../files/docker.service.j2 dest=/etc/systemd/system/docker.service 
+  notify: 
+   - restart docker.service
+
+- stat: path=/etc/systemd/system/docker.service
+  register: d
+
+- name: Reload daemon
+  become: true
+  shell: "systemctl daemon-reload"
+  when: d.stat.exists == false 
+
+- name: Enable docker service
+  become: true
+  shell: "systemctl enable docker"
+  run_once: true
+
+- name: Start docker
+  become: true
+  service: name=docker state=started
