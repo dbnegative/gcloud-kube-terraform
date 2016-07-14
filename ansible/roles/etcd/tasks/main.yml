@@ -91,13 +91,13 @@
 
 - name: Check Status
   shell: "etcdctl --ca-file=/etc/etcd/ca.pem cluster-health"
+  ignore_errors: yes
   register: etcd_status
   tags:
-    - etcd
     - debug
 
 - name: Cluster - etcd status
   debug: msg={{ etcd_status.stdout_lines }}
+  ignore_errors: yes
   tags:
-    - etcd
     - debug

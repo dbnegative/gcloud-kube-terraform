@@ -46,6 +46,18 @@
 
 - name: Start kube-scheduler.service
   become: true
-  service: name=kube-scheduler.service state=started
+  service: name=kube-scheduler state=started
   tags:
     - kube-scheduler
+
+- name: Check Status
+  become: true
+  shell: "systemctl status kube-scheduler --no-pager"
+  register: kubescheduler_status
+  tags:
+    - debug
+
+- name: Cluster - kube controller status
+  debug: msg={{ kubescheduler_status.stdout_lines }}
+  tags:
+    - debug

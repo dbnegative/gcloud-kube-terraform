@@ -15,7 +15,7 @@
 
 - name: Copy over kubeconfig
   become: true
-  template: src=../files/kubeconfig.j2 dest=/var/lib/kubelet/
+  template: src=../files/kubeconfig.j2 dest=/var/lib/kubelet/kubeconfig
   tags:
     - kubelet 
 

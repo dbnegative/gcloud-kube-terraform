@@ -53,8 +53,8 @@
   become: true
   template: src=../files/kube-apiserver.service.j2 dest=/etc/systemd/system/kube-apiserver.service 
   notify: 
-   - restart kube-apiserver
-   tags:
+    - restart kube-apiserver
+  tags:
     - kube-apiserver
 
 - stat: path=/etc/systemd/system/kube-apiserver.service
@@ -81,3 +81,17 @@
   service: name=kube-apiserver state=started
   tags:
     - kube-apiserver
+
+- name: Check Status
+  become: true
+  ignore_errors: yes
+  shell: "systemctl status kube-apiserver --no-pager"
+  register: kubeapi_status
+  tags:
+    - debug
+
+- name: Cluster - kube apiserver status
+  debug: msg={{ kubeapi_status.stdout_lines }}
+  ignore_errors: yes
+  tags:
+    - debug

@@ -61,3 +61,17 @@
   service: name=kube-controller-manager state=started
   tags:
     - kube-controller
+  
+- name: Check Status
+  become: true
+  ignore_errors: yes
+  shell: "systemctl status kube-controller-manager --no-pager"
+  register: kubectrl_status
+  tags:
+    - debug
+
+- name: Cluster - kube controller status
+  ignore_errors: yes
+  debug: msg={{ kubectrl_status.stdout_lines }}
+  tags:
+    - debug

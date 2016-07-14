@@ -37,3 +37,17 @@
   service: name=kube-proxy state=started
   tags:
     - kube-proxy
+
+- name: Check Status
+  become: true
+  shell: "systemctl status kube-proxy --no-pager"
+  register: kubeproxy_status
+  ignore_errors: yes
+  tags:
+    - debug
+
+- name: Cluster - kube controller status
+  ignore_errors: yes
+  debug: msg={{ kubeproxy_status.stdout_lines }}
+  tags:
+    - debug

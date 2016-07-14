@@ -18,3 +18,17 @@
     mode: 0755
   tags:
     - kubectl
+
+- name: Check Status
+  become: true
+  shell: "kubectl get componentstatuses"
+  register: kubectl_status
+  ignore_errors: yes
+  tags:
+    - debug
+
+- name: Cluster - kube controller status
+  debug: msg={{ kubectl_status.stdout_lines }}
+  ignore_errors: yes
+  tags:
+    - debug
