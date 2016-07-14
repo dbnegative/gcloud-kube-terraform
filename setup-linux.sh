@@ -8,10 +8,10 @@ cd ssl
 #Generate cert assume cfssl is installed
 if [ ! -f ca.pem ]
 then
-	echo "Generating CA\n"
+	echo "Generating CA\n----------"
 	cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 else
-	echo "CA exists..skipping\n"
+	echo "CA exists..skipping\n----------"
 fi
 
 cd ..
@@ -19,13 +19,13 @@ cd ..
 #Check if credentials exist then run Terraform
 if [ -f account.json ]
 then
-	echo "Running Terraform Plan\n"
+	echo "Running Terraform Plan\n----------"
 	terraform plan > plannedchanges.log
-
-	echo "Running Terraform Apply\n"
+    echo "Running Terraform Apply\n----------"
   terraform apply
 else
 	echo "Google service credentials missing, cannot find account.json"
+    exit
 fi
 
 #Create list of servers for ansible and ssl cert gen
@@ -73,6 +73,7 @@ then
     -config=ca-config.json \
     -profile=kubernetes \
     kubernetes-csr.json | cfssljson -bare kubernetes
+fi    
 
 #Change to ansible workdir
 cd ../ansible
@@ -81,7 +82,7 @@ cd ../ansible
 if [ "$OLDHASH" != "$NEWHASH" ] || [ ! -f gchosts ]
 then
     #Copy template file
-    cp gcehosts.tmpl gcehosts
+    cp templates/gcehosts.tmpl gcehosts
 
     #Copy over ssl certs to be provisioned
     cp ../ssl/kubernetes.pem roles/common/files/
@@ -89,7 +90,7 @@ then
     cp ../ssl/ca.pem roles/common/files/
 
     #Get Nat IP's of all hosts
-    echo "Collecting node IP's from gcloud'"
+    echo "Collecting node IP's from gcloud\n----------"
     ETCD0_NAT_IP=`gcloud compute instances list etcd0 --format=yaml | grep "  natIP:" | cut -c 12-100`
     ETCD1_NAT_IP=`gcloud compute instances list etcd1 --format=yaml | grep "  natIP:" | cut -c 12-100`
     ETCD2_NAT_IP=`gcloud compute instances list etcd2 --format=yaml | grep "  natIP:" | cut -c 12-100`
@@ -109,7 +110,7 @@ fi
 if [ "$OLDHASH" != "$NEWHASH" ] || [ ! -f group_vars/all ]
 then
     #Export IP's' to vars file
-    echo "Exporting IP's to Ansible vars'"
+    echo "Exporting IP's to Ansible vars\n----------"
     echo "
     etcd:
         etcd0: $ETCD0_IP
@@ -130,9 +131,17 @@ then
     " > group_vars/all
 fi
 
-echo "Sleeping 10s, waiting for nodes to be ready"
+#Wait for nodes to be ready
+echo "Sleeping 10s, waiting for nodes to be ready\n----------"
 sleep 10
 
-#configure nodes
-echo "Starting Ansible"
+#Configure nodes
+echo "Starting Ansible\n----------"
 export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1
+
+#clean up
+#TODO: clean up other files etc
+if [ $? -eq 0 ]
+then
+    rm -rf group_vars/all
+fi
