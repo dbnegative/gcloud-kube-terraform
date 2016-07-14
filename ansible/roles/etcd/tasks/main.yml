@@ -16,11 +16,15 @@
 - name: Untar etcd.tar.gz
   become: true
   command: "tar xvfz /tmp/etcd.tar.gz -C /tmp/" 
-  when: e.stat.isdir is not defined and e.stat.isdir == false
+  when: e.stat.exists == false
+
+- stat: path=/usr/bin/etcd
+  register: etcbin
 
 - name: Copy etcd binarys into /usr/bin
   become: true
   shell: "cp /tmp/etcd-v3.0.1-linux-amd64/etcd* /usr/bin/"
+  when: etcbin.stat.exists == false
 
 - name: Copy SSL certs into dircetory   
   become: true
@@ -33,10 +37,7 @@
    method: GET
    return_content: yes
   register: internal_ip
-
-- name: output rest data
-  debug: msg="{{ internal_ip }}"
-
+  
 - name: Copy over etcd.service
   become: true
   template: src=../files/etcd.service.j2 dest=/etc/systemd/system/etcd.service 
@@ -54,6 +55,7 @@
 - name: Enable etcd service
   become: true
   shell: "systemctl enable etcd"
+  run_once: true
 
 - name: Start etcd
   become: true
