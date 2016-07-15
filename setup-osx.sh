@@ -10,6 +10,8 @@ then
     mkdir ansible/group_vars
 fi
 
+gsutil mb -l eu gs://terraform-remote-kube
+
 #Assumes ssl folder exists and contains ca config files
 cd ssl
 
@@ -30,7 +32,7 @@ then
     #set remote state
     terraform remote config \
     -backend=gcs \
-    -backend-config="bucket=terraform-state-kube" \
+    -backend-config="bucket=terraform-remote-kube" \
     -backend-config="path=main/terraform.tfstate" \
     -backend-config="project=kubernetes"
 
