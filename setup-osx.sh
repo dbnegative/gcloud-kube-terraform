@@ -68,6 +68,40 @@ WORKER1_IP=`gcloud compute instances list worker1 --format=yaml | grep "  networ
 KUBERNETES_PUBLIC_IP_ADDRESS=$(gcloud compute addresses describe kubernetes \
   --format 'value(address)')
 
+#Create routes seperate
+cd ../terraform-routes
+cp routes.tf.tmpl routes.tf
+sed -i ""  "s/WORKER0IP/${WORKER0_IP}/g; s/WORKER1IP/${WORKER1_IP}/g" routes.tf
+
+echo "Creating routes\n----------"
+if [ -f account.json ]
+then
+    #set remote state
+    terraform remote config \
+    -backend=gcs \
+    -backend-config="bucket=terraform-remote-kube" \
+    -backend-config="path=routes/terraform.tfstate" \
+    -backend-config="project=kubernetes"
+
+    #Check what changes Terraform will make if any..
+	echo "Running Terraform Plan\n----------"
+	terraform plan > plannedchanges.log
+
+    #Check if anything has changed - not a great way to do this but since the resource order varies in 
+    #terraform plan we cannot use a hash     
+    grep "No changes. Infrastructure is up-to-date" plannedchanges.log > /dev/null
+    if [  $? -ne 0 ]
+    then
+        echo "Running Terraform Apply\n----------"
+        terraform apply
+    else
+        echo "No Changes detected\n----------"
+    fi    
+else
+	echo "Google service credentials missing, cannot find account.json"
+    exit
+fi
+
 # cd to working dir
 cd ../ssl 
 
@@ -118,7 +152,7 @@ then
     cp ../ssl/ca.pem roles/common/files/
 
     #Get Nat IP's of all hosts
-    echo "Collecting node IP's from gcloud\n----------"
+    echo "----------\nCollecting node IP's from gcloud\n----------"
     ETCD0_NAT_IP=`gcloud compute instances list etcd0 --format=yaml | grep "  natIP:" | cut -c 12-100`
     ETCD1_NAT_IP=`gcloud compute instances list etcd1 --format=yaml | grep "  natIP:" | cut -c 12-100`
     ETCD2_NAT_IP=`gcloud compute instances list etcd2 --format=yaml | grep "  natIP:" | cut -c 12-100`
@@ -174,3 +208,25 @@ if [ $? -eq 0 ]
 then
     rm -rf group_vars/all
 fi
+cd ..
+
+#Setup local kubectl client
+if [ ! -f /usr/local/bin/kubectl ]
+then
+    wget https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/darwin/amd64/kubectl
+    chmod +x kubectl
+    sudo mv kubectl /usr/local/bin
+fi
+
+kubectl config set-cluster kubernetes \
+  --certificate-authority=ssl/ca.pem \
+  --embed-certs=true \
+  --server=https://${KUBERNETES_PUBLIC_IP_ADDRESS}:6443
+
+kubectl config set-credentials admin --token chAng3m3
+
+kubectl config set-context default-context \
+  --cluster=kubernetes \
+  --user=admin
+
+kubectl config use-context default-context
