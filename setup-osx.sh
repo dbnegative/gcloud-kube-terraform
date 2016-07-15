@@ -4,7 +4,11 @@
 
 
 #init
-rm -rf ansible/group_vars/all
+if [ ! -d ansible/group_vars ]
+then
+    echo "Creating ansible/group_vars folder\n----------"
+    mkdir ansible/group_vars
+fi
 
 #Assumes ssl folder exists and contains ca config files
 cd ssl
