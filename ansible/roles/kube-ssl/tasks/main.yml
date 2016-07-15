@@ -1,0 +1,18 @@
+- name: Create kubernetes dir
+  become: true
+  file: path=/var/lib/kubernetes state=directory
+
+- name: Copy SSL certs into dircetory   
+  become: true
+  shell: "cp /ssl/*.pem /var/lib/kubernetes/."
+  notify: 
+    - restart kube-apiserver
+    - restart kube-controller-manager
+    - restart kube-scheduler
+    - restart kube-proxy
+    - restart kubelet
+    - restart docker
+  tags:
+    - ssl
+
+- meta: flush_handlers

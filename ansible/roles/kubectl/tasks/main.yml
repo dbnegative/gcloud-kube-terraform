@@ -4,12 +4,6 @@
   tags:
     - kubectl
 
-- name: Copy SSL certs into dircetory   
-  become: true
-  shell: "cp /ssl/*.pem /var/lib/kubernetes/."
-  tags:
-    - kubectl
-
 - name: Download kubectl binary
   become: true
   get_url: 

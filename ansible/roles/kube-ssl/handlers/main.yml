@@ -1,0 +1,29 @@
+- name: restart kube-apiserver
+  become: true
+  service: name=kube-apiserver state=restarted
+  when: "'controller' in group_names"
+
+- name: restart kube-controller-manager
+  become: true
+  service: name=kube-controller-manager state=restarted
+  when: "'controller' in group_names"
+
+- name: restart kube-scheduler
+  become: true
+  service: name=kube-scheduler state=restarted
+  when: "'controller' in group_names"
+
+- name: restart kubelet
+  become: true
+  service: name=kubelet state=restarted
+  when: "'worker' in group_names"
+
+- name: restart kube-proxy
+  become: true
+  service: name=kube-proxy state=restarted
+  when: "'worker' in group_names"
+
+- name: restart docker
+  become: true
+  service: name=docker state=restarted
+  when: "'worker' in group_names"

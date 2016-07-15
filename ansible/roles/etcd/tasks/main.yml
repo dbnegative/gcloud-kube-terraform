@@ -43,6 +43,8 @@
 - name: Copy SSL certs into dircetory   
   become: true
   shell: "cp /ssl/*.pem /etc/etcd/."
+  notify: 
+   - restart etcd
   tags:
     - etcd
 

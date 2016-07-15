@@ -11,6 +11,7 @@
 - hosts: controller
   remote_user: root
   roles:
+    - { role: kube-ssl }
     - { role: kube-apiserver, tags: kube-apiserver }
     - { role: kube-controller, tags: kube-controller }
     - { role: kube-scheduler, tags: kube-scheduler }
@@ -19,6 +20,7 @@
 - hosts: worker
   remote_user: root
   roles:
+    - { role: kube-ssl }
     - { role: cni, tags: cni }
     - { role: docker, tags: docker }
     - { role: kubectl, tags: kubectl }

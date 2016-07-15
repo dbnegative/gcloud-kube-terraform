@@ -4,13 +4,6 @@
   tags:
     - ssl
     - kube-apiserver
-
-- name: Copy SSL certs into dircetory   
-  become: true
-  shell: "cp /ssl/*.pem /var/lib/kubernetes/."
-  tags:
-    - ssl
-    - kube-apiserver
   
 - name: Download kube-apiserver binary
   become: true

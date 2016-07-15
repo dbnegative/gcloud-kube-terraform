@@ -4,12 +4,6 @@
   tags:
     - kube-controller
 
-- name: Copy SSL certs into dircetory   
-  become: true
-  shell: "cp /ssl/*.pem /var/lib/kubernetes/."
-  tags:
-    - kube-controller
-
 - name: Download kube-controller-manager binary
   become: true
   get_url: 
