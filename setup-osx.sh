@@ -20,6 +20,7 @@ if [ ! -f ca.pem ]
 then
 	echo "Generating CA\n----------"
 	cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+    UPDATEKUBECERT=1
 else
 	echo "CA exists..skipping\n----------"
 fi
@@ -106,7 +107,7 @@ fi
 cd ../ssl 
 
 # copy over template
-if [ ! -f kubernetes-csr.json ]
+if [ ! -f kubernetes-csr.json ] || [ "$UPDATEKUBECERT" == 1  ]
 then
     cp kubernetes-csr.json.tmpl kubernetes-csr.json
 fi
@@ -126,7 +127,7 @@ NEWHASH=`md5 kubernetes-csr.json`
 #echo "NEWHASH: $NEWHASH\n----------"
 
 #Generate kube cert
-if [ "$OLDHASH" != "$NEWHASH" ] || [ ! -f kubernetes.pem ]
+if [ "$OLDHASH" != "$NEWHASH" ] || [ ! -f kubernetes.pem ] || [ "$UPDATEKUBECERT" == 1  ]
 then
     echo "Generatining kubernetes cert and key\n----------"
     cfssl gencert \
