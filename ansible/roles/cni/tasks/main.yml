@@ -14,14 +14,14 @@
   tags:
     - cni
 
-- stat: path=/opt/cni/
-  register: cni
+- stat: path=/opt/cni/bin/cnitool
+  register: cni_status
   tags:
     - cni
 
 - name: Untar cni.tar.gz
   become: true
   command: "tar xvfz /tmp/cni.tar.gz -C /opt/cni" 
-  when: cni.stat.exists == false
+  when: cni_status.stat.exists == false
   tags:
     - cni
