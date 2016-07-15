@@ -64,3 +64,17 @@
   service: name=docker state=started
   tags:
     - docker
+
+- name: Check Status
+  become: true
+  ignore_errors: yes
+  shell: "systemctl status docker --no-pager"
+  register: docker_status
+  tags:
+    - debug
+
+- name: Cluster - kube controller status
+  ignore_errors: yes
+  debug: msg={{ docker_status.stdout_lines }}
+  tags:
+    - debug
