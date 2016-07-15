@@ -2,6 +2,10 @@
 #Makes assumptions for many things such as terraform, ansible and cfssl being 
 #installed and located in PATH etc.. tread lightly
 
+
+#init
+rm -rf ansible/group_vars/all
+
 #Assumes ssl folder exists and contains ca config files
 cd ssl
 
@@ -19,6 +23,13 @@ cd ../terraform
 #Check if credentials exist then run Terraform
 if [ -f account.json ]
 then
+    #set remote state
+    terraform remote config \
+    -backend=gcs \
+    -backend-config="bucket=terraform-state-kube" \
+    -backend-config="path=main/terraform.tfstate" \
+    -backend-config="project=kubernetes"
+
     #Check what changes Terraform will make if any..
 	echo "Running Terraform Plan\n----------"
 	terraform plan > plannedchanges.log
