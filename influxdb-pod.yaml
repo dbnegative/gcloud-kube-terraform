@@ -7,7 +7,7 @@ metadata:
 spec:
   containers:
   - name: influxdb 
-    image: jasonwitting/alpine-influxdbv1:latest
+    image: tutum/influxdb:latest
     ports:
     - containerPort: 8083
       hostPort: 8083
