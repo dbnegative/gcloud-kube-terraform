@@ -5,7 +5,7 @@
   tags:
     - common
     
-- name: Install pip
+- name: "Install dependancies: pip, socat"
   become: true
   apt: 
     pkg:
