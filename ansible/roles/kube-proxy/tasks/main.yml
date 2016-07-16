@@ -32,6 +32,31 @@
   tags:
     - kube-proxy
 
+- name: Copy kubernetes.pem to nodes
+  become: true
+  copy: src=../../../../ssl/kubernetes.pem dest=/var/lib/kubernetes/ mode=0644
+  notify: 
+    - restart kube-proxy
+  tags: 
+    - kube-proxy
+  
+- name: Copy kubernetes-key.pem to nodes
+  become: true
+  copy: src=../../../../ssl/kubernetes-key.pem dest=/var/lib/kubernetes/ mode=0644
+  notify: 
+    - restart kube-proxy
+  tags: 
+    - kube-proxy
+  
+- name: Copy ca.pem to nodes
+  copy: src=../../../../ssl/ca.pem dest=/var/lib/kubernetes/ mode=0644
+  become: true
+  notify: 
+    - restart kube-proxy
+  tags: 
+   - kube-proxy
+
+
 - name: Start kube-proxy
   become: true
   service: name=kube-proxy state=started

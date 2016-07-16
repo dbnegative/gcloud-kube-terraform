@@ -51,6 +51,30 @@
   tags:
     - kubelet
 
+- name: Copy kubernetes.pem to nodes
+  become: true
+  copy: src=../../../../ssl/kubernetes.pem dest=/var/lib/kubernetes/ mode=0644
+  notify: 
+    - restart kubelet
+  tags: 
+    - kubelet
+  
+- name: Copy kubernetes-key.pem to nodes
+  become: true
+  copy: src=../../../../ssl/kubernetes-key.pem dest=/var/lib/kubernetes/ mode=0644
+  notify: 
+    - restart kubelet
+  tags: 
+    - kubelet
+  
+- name: Copy ca.pem to nodes
+  copy: src=../../../../ssl/ca.pem dest=/var/lib/kubernetes/ mode=0644
+  become: true
+  notify: 
+    - restart kubelet
+  tags: 
+   - kubelet
+
 - name: Start kubelet
   become: true
   service: name=kubelet state=started

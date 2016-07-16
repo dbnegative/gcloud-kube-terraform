@@ -1,27 +1,10 @@
-- name: Make temp SSL Dir
+- name: Create kubernetes dir
   become: true
-  file: path=/ssl/ state=directory mode=0777
-  tags: 
+  file: path=/var/lib/kubernetes state=directory
+  when: ('controller' in group_names) or ('worker' in group_names)
+  tags:
     - common
-
-- name: Copy kubernetes.pem to nodes
-  become: true
-  copy: src=../files/kubernetes.pem dest=/ssl/ mode=0644
-  tags: 
-    - common
-  
-- name: Copy kubernetes-key.pem to nodes
-  become: true
-  copy: src=../files/kubernetes-key.pem dest=/ssl/ mode=0644
-  tags: 
-    - common
-  
-- name: Copy ca.pem to nodes
-  copy: src=../files/ca.pem dest=/ssl/ mode=0644
-  become: true
-  tags: 
-    - common
-
+    
 - name: Install pip
   become: true
   apt: pkg=python-pip state=present

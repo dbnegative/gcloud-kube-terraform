@@ -44,7 +44,32 @@
   tags:
     - kube-scheduler
 
-- name: Start kube-scheduler.service
+- name: Copy kubernetes.pem to nodes
+  become: true
+  copy: src=../../../../ssl/kubernetes.pem dest=/var/lib/kubernetes/ mode=0644
+  notify: 
+    - restart kube-scheduler
+  tags: 
+    - kube-scheduler
+  
+- name: Copy kubernetes-key.pem to nodes
+  become: true
+  copy: src=../../../../ssl/kubernetes-key.pem dest=/var/lib/kubernetes/ mode=0644
+  notify: 
+    - restart kube-scheduler
+  tags: 
+    - kube-scheduler
+  
+- name: Copy ca.pem to nodes
+  copy: src=../../../../ssl/ca.pem dest=/var/lib/kubernetes/ mode=0644
+  become: true
+  notify: 
+    - restart kube-scheduler
+  tags: 
+   - kube-scheduler
+
+
+- name: Start kube-scheduler service
   become: true
   service: name=kube-scheduler state=started
   tags:

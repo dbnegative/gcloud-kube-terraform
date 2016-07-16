@@ -147,11 +147,6 @@ then
     #Copy template file
     cp templates/gcehosts.tmpl gcehosts
 
-    #Copy over ssl certs to be provisioned
-    cp ../ssl/kubernetes.pem roles/common/files/
-    cp ../ssl/kubernetes-key.pem roles/common/files/
-    cp ../ssl/ca.pem roles/common/files/
-
     #Get Nat IP's of all hosts
     echo "----------\nCollecting node IP's from gcloud\n----------"
     ETCD0_NAT_IP=`gcloud compute instances list etcd0 --format=yaml | grep "  natIP:" | cut -c 12-100`
@@ -201,32 +196,36 @@ sleep 10
 echo "Starting Ansible\n----------"
 export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1
 
-#clean up
-#TODO: clean up other files etc
-#if [ $? -eq 0 ]
-#then
-    #rm -rf group_vars/all
-#fi
-
-cd ..
-
-#Setup local kubectl client
-if [ ! -f /usr/local/bin/kubectl ]
+if [ $? -eq 0  ]
 then
-    wget https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/darwin/amd64/kubectl
-    chmod +x kubectl
-    sudo mv kubectl /usr/local/bin
+    cd ..
+    #Setup local kubectl client
+    if [ ! -f /usr/local/bin/kubectl ]
+    then
+        wget https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/darwin/amd64/kubectl
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin
+    fi
+
+    kubectl config set-cluster kubernetes \
+    --certificate-authority=ssl/ca.pem \
+    --embed-certs=true \
+    --server=https://${KUBERNETES_PUBLIC_IP_ADDRESS}:6443
+
+    kubectl config set-credentials admin --token chAng3m3
+
+    kubectl config set-context default-context \
+    --cluster=kubernetes \
+    --user=admin
+
+    kubectl config use-context default-context
+
+    #Print status
+    kubectl get componentstatuses
+
+    #Assuming everything has worked provision skydns
+    kubectl create -f skydns-svc.yaml
+    kubectl create -f skydns-rc.yaml
+
+    kubectl get pods --namespace=kube-system
 fi
-
-kubectl config set-cluster kubernetes \
-  --certificate-authority=ssl/ca.pem \
-  --embed-certs=true \
-  --server=https://${KUBERNETES_PUBLIC_IP_ADDRESS}:6443
-
-kubectl config set-credentials admin --token chAng3m3
-
-kubectl config set-context default-context \
-  --cluster=kubernetes \
-  --user=admin
-
-kubectl config use-context default-context

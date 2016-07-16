@@ -40,13 +40,6 @@
   tags:
     - etcd
 
-- name: Copy SSL certs into dircetory   
-  become: true
-  shell: "cp /ssl/*.pem /etc/etcd/."
-  notify: 
-   - restart etcd
-  tags:
-    - etcd
 
 - name: Get internal ip
   uri: 
@@ -81,9 +74,35 @@
 - name: Enable etcd service
   become: true
   shell: "systemctl enable etcd"
-  run_once: true
   tags:
     - etcd
+
+- name: Copy kubernetes.pem to nodes
+  become: true
+  copy: src=./../../../ssl/kubernetes.pem dest=/etc/etcd/ mode=0644
+  when: ('etcd' in group_names) 
+  notify: 
+    - restart etcd
+  tags: 
+    - ssl
+  
+- name: Copy kubernetes-key.pem to nodes
+  become: true
+  copy: src=./../../../ssl/kubernetes-key.pem dest=/etc/etcd/ mode=0644
+  when: ('etcd' in group_names)
+  notify: 
+    - restart etcd
+  tags: 
+    - ssl
+  
+- name: Copy ca.pem to nodes
+  copy: src=../../../../ssl/ca.pem dest=/etc/etcd/ mode=0644
+  when: ('etcd' in group_names)
+  become: true
+  notify: 
+    - restart etcd
+  tags: 
+    - ssl
 
 - name: Start etcd
   become: true
