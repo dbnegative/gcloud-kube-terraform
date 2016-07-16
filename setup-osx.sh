@@ -117,10 +117,10 @@ OLDHASH=`md5 kubernetes-csr.json`
 #echo "----------\nOLDHASH: $OLDHASH"
 
 #Add ip's' to the kubernetes csr config file assumes terraform was successful
-sed -i \'\' "s/ETCD0IP/${ETCD0_IP}/g; s/ETCD1IP/${ETCD1_IP}/g; s/ETCD2IP/${ETCD2_IP}/g" kubernetes-csr.json
-sed -i \'\' "s/CTRL0IP/${CTRL0_IP}/g; s/CTRL1IP/${CTRL1_IP}/g; s/CTRL2IP/${CTRL2_IP}/g" kubernetes-csr.json
-sed -i \'\' "s/WORKER0IP/${WORKER0_IP}/g; s/WORKER1IP/${WORKER1_IP}/g" kubernetes-csr.json
-sed -i \'\' "s/KUBERNETES_PUBLIC_IP/${KUBERNETES_PUBLIC_IP_ADDRESS}/g" kubernetes-csr.json
+sed -i "" "s/ETCD0IP/${ETCD0_IP}/g; s/ETCD1IP/${ETCD1_IP}/g; s/ETCD2IP/${ETCD2_IP}/g" kubernetes-csr.json
+sed -i "" "s/CTRL0IP/${CTRL0_IP}/g; s/CTRL1IP/${CTRL1_IP}/g; s/CTRL2IP/${CTRL2_IP}/g" kubernetes-csr.json
+sed -i "" "s/WORKER0IP/${WORKER0_IP}/g; s/WORKER1IP/${WORKER1_IP}/g" kubernetes-csr.json
+sed -i "" "s/KUBERNETES_PUBLIC_IP/${KUBERNETES_PUBLIC_IP_ADDRESS}/g" kubernetes-csr.json
 
 #Get MD5 Hash
 NEWHASH=`md5 kubernetes-csr.json`
@@ -164,14 +164,12 @@ then
     WORKER1_NAT_IP=`gcloud compute instances list worker1 --format=yaml | grep "  natIP:" | cut -c 12-100`
 
     #Add ip's' to the ansible inventory file assumes terraform was successful
-    sed -i \'\' "s/ETCD0IP/${ETCD0_NAT_IP}/g; s/ETCD1IP/${ETCD1_NAT_IP}/g; s/ETCD2IP/${ETCD2_NAT_IP}/g" gcehosts
-    sed -i \'\' "s/CTRL0IP/${CTRL0_NAT_IP}/g; s/CTRL1IP/${CTRL1_NAT_IP}/g; s/CTRL2IP/${CTRL2_NAT_IP}/g" gcehosts
-    sed -i \'\' "s/WORKER0IP/${WORKER0_NAT_IP}/g; s/WORKER1IP/${WORKER1_NAT_IP}/g" gcehosts
+    sed -i "" "s/ETCD0IP/${ETCD0_NAT_IP}/g; s/ETCD1IP/${ETCD1_NAT_IP}/g; s/ETCD2IP/${ETCD2_NAT_IP}/g" gcehosts
+    sed -i "" "s/CTRL0IP/${CTRL0_NAT_IP}/g; s/CTRL1IP/${CTRL1_NAT_IP}/g; s/CTRL2IP/${CTRL2_NAT_IP}/g" gcehosts
+    sed -i "" "s/WORKER0IP/${WORKER0_NAT_IP}/g; s/WORKER1IP/${WORKER1_NAT_IP}/g" gcehosts
 fi
 
-#Apply only if hash is different or var file is missing
-if [ "$OLDHASH" != "$NEWHASH" ] || [ ! -f group_vars/all ]
-then
+
 #Export IP's' to vars file, this file is kept inline due to easy of setting vars without too much sed
 echo "Exporting IP's to Ansible vars\n----------'"
 echo "
@@ -192,7 +190,7 @@ worker:
 ansible_connection: ssh 
 ansible_ssh_user: shortjay
 " > group_vars/all
-fi
+
 
 #Wait for nodes to be ready
 #TODO: Have a better way of checking, perhaps this is only run the 1st time then creates a .lck file to skip this
@@ -205,10 +203,11 @@ export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml 
 
 #clean up
 #TODO: clean up other files etc
-if [ $? -eq 0 ]
-then
-    rm -rf group_vars/all
-fi
+#if [ $? -eq 0 ]
+#then
+    #rm -rf group_vars/all
+#fi
+
 cd ..
 
 #Setup local kubectl client
