@@ -227,5 +227,8 @@ then
     kubectl create -f skydns-svc.yaml
     kubectl create -f skydns-rc.yaml
 
+    #Install the webdashboard
+    kubectl create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml
+
     kubectl get pods --namespace=kube-system
 fi
