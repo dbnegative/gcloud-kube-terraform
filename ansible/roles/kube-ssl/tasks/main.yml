@@ -14,5 +14,3 @@
     - restart docker
   tags:
     - ssl
-
-- meta: flush_handlers
