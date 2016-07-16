@@ -9,3 +9,4 @@ plannedchanges.log
 *.json
 gcehosts*
 *csr.json
+routes.tf
