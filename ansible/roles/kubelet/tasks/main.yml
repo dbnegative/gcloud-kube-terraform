@@ -1,3 +1,9 @@
+- name: Stop kubelet service
+  become: true
+  shell: "systemctl stop kubelet"
+  tags:
+    - kubelet
+
 - name: Download kubelet binary
   become: true
   get_url: 
@@ -49,3 +55,19 @@
   service: name=kubelet state=started
   tags:
     - kubelet
+
+- name: Check Status
+  become: true
+  shell: systemctl status kubelet --no-pager
+  register: kubelet_status
+  ignore_errors: yes
+  when: "'worker' in group_names"
+  tags:
+    - debug
+
+- name: Cluster kubelet status
+  debug: msg={{ kubelet_status.stdout_lines }}
+  ignore_errors: yes
+  when: "'worker' in group_names"
+  tags:
+    - debug
