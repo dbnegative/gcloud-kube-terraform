@@ -223,11 +223,14 @@ kubectl get componentstatuses
 
 #Assuming everything has worked provision skydns
 
+echo "Sleeping 15s to wait for Kube to settle.."
 sleep 15
-#kubectl create -f skydns-svc.yaml
-#kubectl create -f skydns-rc.yaml
+kubectl create -f https://raw.githubusercontent.com/kelseyhightower/kubernetes-the-hard-way/master/skydns-svc.yaml
+kubectl create -f https://raw.githubusercontent.com/kelseyhightower/kubernetes-the-hard-way/master/skydns-rc.yaml
 
 #Install the webdashboard
-#kubectl create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml
+echo "sleeping 30s waiting for KubeDNS to be ready"
+sleep 30
+kubectl create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml
 
 kubectl get pods --namespace=kube-system
