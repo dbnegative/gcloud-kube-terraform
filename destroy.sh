@@ -14,3 +14,4 @@ echo "Removing ansible vars"
 rm -rf ansible/group_vars/all
 rm -rf ansible/gcehosts
 rm -rf ansible/roles/common/files/*.pem
+rm -rf terraform-routes/routes.tf
