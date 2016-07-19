@@ -55,7 +55,6 @@
 - name: Enable docker service
   become: true
   shell: "systemctl enable docker"
-  run_once: true
   tags:
     - docker
 
@@ -69,12 +68,12 @@
   become: true
   ignore_errors: yes
   shell: "systemctl status docker --no-pager"
-  register: docker_status
+  register: dockersrv_status
   tags:
     - debug
 
 - name: Cluster - kube controller status
   ignore_errors: yes
-  debug: msg={{ docker_status.stdout_lines }}
+  debug: msg={{ dockersrv_status.stdout_lines }}
   tags:
     - debug
