@@ -40,7 +40,6 @@
   tags:
     - etcd
 
-
 - name: Get internal ip
   uri: 
    url: http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip 
@@ -84,7 +83,7 @@
   notify: 
     - restart etcd
   tags: 
-    - ssl
+    - etcd
   
 - name: Copy kubernetes-key.pem to nodes
   become: true
@@ -93,7 +92,7 @@
   notify: 
     - restart etcd
   tags: 
-    - ssl
+    - etcd
   
 - name: Copy ca.pem to nodes
   copy: src=../../../../ssl/ca.pem dest=/etc/etcd/ mode=0644
@@ -102,7 +101,7 @@
   notify: 
     - restart etcd
   tags: 
-    - ssl
+    - etcd
 
 - name: Start etcd
   become: true
