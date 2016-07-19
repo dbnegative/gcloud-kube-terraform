@@ -1,7 +1,7 @@
 #------------------ ETCD -------------------------------------------
 resource "google_compute_instance" "etcd-cluster" {
   name         = "etcd${count.index}"
-  machine_type = "${var.instance-type}"
+  machine_type = "g1-small"
   zone         = "${var.region}-${element(var.az, count.index)}"
   disk {
       image = "${var.disk["image"]}"
@@ -26,7 +26,7 @@ resource "google_compute_instance" "etcd-cluster" {
 #---------------- CONTROLLER ----------------------------------------
 resource "google_compute_instance" "controller-cluster" {
   name         = "controller${count.index}"
-  machine_type = "${var.instance-type}"
+  machine_type = "g1-small"
   zone         = "${var.region}-${element(var.az, count.index)}"
   disk {
       image = "${var.disk["image"]}"
