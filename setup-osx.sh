@@ -70,40 +70,41 @@ WORKER1_IP=`gcloud compute instances list worker1 --format=yaml | grep "  networ
 KUBERNETES_PUBLIC_IP_ADDRESS=$(gcloud compute addresses describe kubernetes \
   --format 'value(address)')
 
+#-------------------------------------------------------------------------------------------------------------------------------
 #Create routes seperate
-cd ../terraform-routes
-cp routes.tf.tmpl routes.tf
-sed -i ""  "s/WORKER0IP/${WORKER0_IP}/g; s/WORKER1IP/${WORKER1_IP}/g" routes.tf
+#cd ../terraform-routes
+#cp routes.tf.tmpl routes.tf
+#sed -i ""  "s/WORKER0IP/${WORKER0_IP}/g; s/WORKER1IP/${WORKER1_IP}/g" routes.tf
 
-echo "Creating routes\n----------"
-if [ -f ../creds/account.json ]
-then
+#echo "Creating routes\n----------"
+#if [ -f ../creds/account.json ]
+#then
     #set remote state
-    terraform remote config \
-    -backend=gcs \
-    -backend-config="bucket=terraform-remote-kube" \
-    -backend-config="path=routes/terraform.tfstate" \
-    -backend-config="project=kubernetes"
+#    terraform remote config \
+#    -backend=gcs \
+#    -backend-config="bucket=terraform-remote-kube" \
+#    -backend-config="path=routes/terraform.tfstate" \
+#    -backend-config="project=kubernetes"
 
     #Check what changes Terraform will make if any..
-	echo "Running Terraform Plan\n----------"
-	terraform plan > plannedchanges.log
+#	echo "Running Terraform Plan\n----------"
+#	terraform plan > plannedchanges.log
 
     #Check if anything has changed - not a great way to do this but since the resource order varies in 
     #terraform plan we cannot use a hash     
-    grep "No changes. Infrastructure is up-to-date" plannedchanges.log > /dev/null
-    if [  $? -ne 0 ]
-    then
-        echo "Running Terraform Apply\n----------"
-        terraform apply
-    else
-        echo "No Changes detected\n----------"
-    fi    
-else
-	echo "Google service credentials missing, cannot find account.json"
-    exit
-fi
-
+#    grep "No changes. Infrastructure is up-to-date" plannedchanges.log > /dev/null
+#    if [  $? -ne 0 ]
+#    then
+#        echo "Running Terraform Apply\n----------"
+#        terraform apply
+#   else
+#        echo "No Changes detected\n----------"
+#    fi    
+#else
+#	echo "Google service credentials missing, cannot find account.json"
+#    exit
+#fi
+#------------------------------------------------------------------------------------------------------------------------------
 # cd to working dir
 cd ../ssl 
 
@@ -196,8 +197,25 @@ sleep 10
 #Configure nodes
 echo "Starting Ansible\n----------"
 export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1 --tags sslworker
+if [ $? -gt 0 ]
+then
+    echo "Ansible Failed to provsion SSL worker"
+    exit
+fi
 export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1 --tags sslctrl
+if [ $? -gt 0 ]
+then
+    echo "Ansible Failed to provsion SSL ctrl"
+    exit
+fi
 export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1
+if [ $? -gt 0 ]
+then
+    echo "Ansible Failed to provsion main playbook"
+    exit
+fi
+
+
 
 cd ..
 #Setup local kubectl client
@@ -223,6 +241,55 @@ kubectl config use-context default-context
 
 #Print status
 kubectl get componentstatuses
+if [ $? -gt 0 ]
+then    
+    echo "Could not connect to API"
+    exit
+fi
+
+#----------------------------------------
+OUTPUT=`kubectl get nodes --output=jsonpath='{range .items[*]}{.status.addresses[?(@.type=="InternalIP")].address} {.spec.podCIDR} {"\n"}{end}'`
+
+IP1=`echo "$OUTPUT"|cut -d " " -f1|awk 'NR==1{print $1}'`
+IP2=`echo "$OUTPUT"|cut -d " " -f1|awk 'NR==2{print $1}'`
+DESTNET1=`echo "$OUTPUT"|cut -d " " -f2|awk 'NR==1{print $1}'|cut -d "/" -f1`
+DESTNET2=`echo "$OUTPUT"|cut -d " " -f2|awk 'NR==2{print $1}'|cut -d "/" -f1`
+
+cd terraform-routes
+cp routes.tf.tmpl routes.tf
+sed -i ""  "s/IP1/${IP1}/g; s/IP2/${IP2}/g" routes.tf
+sed -i ""  "s/DESTNET1/${DESTNET1}/g; s/DESTNET2/${DESTNET2}/g" routes.tf
+
+
+echo "Creating routes\n----------"
+if [ -f ../creds/account.json ]
+then
+
+    #set remote state
+    terraform remote config \
+    -backend=gcs \
+    -backend-config="bucket=terraform-remote-kube" \
+    -backend-config="path=routes/terraform.tfstate" \
+    -backend-config="project=kubernetes"
+
+    #Check what changes Terraform will make if any..
+	echo "Running Terraform Plan\n----------"
+	terraform plan > plannedchanges.log
+
+    #Check if anything has changed - not a great way to do this but since the resource order varies in 
+    #terraform plan we cannot use a hash     
+    grep "No changes. Infrastructure is up-to-date" plannedchanges.log > /dev/null
+    if [  $? -ne 0 ]
+    then
+        echo "Running Terraform Apply\n----------"
+        terraform apply
+   else
+        echo "No Changes detected\n----------"
+    fi    
+else
+	echo "Google service credentials missing, cannot find account.json"
+    exit
+fi
 
 #Assuming everything has worked provision skydns
 
