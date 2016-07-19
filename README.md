@@ -20,7 +20,12 @@ Automated provisioning of kubernetes based off https://github.com/kelseyhightowe
 * You have an ssh key generated called "google_compute_1" in your ssh folder 
 * Make sure that key has been added to your project metadata
 
+Do the follwing in the root of the folder
 ```
+all:
+mkdir creds
+cp <YOUR GOOGLE SERVICE ACCOUNT CREDS JSON> creds/account.json
+
 osx:
 ./setup-osx.sh
 
