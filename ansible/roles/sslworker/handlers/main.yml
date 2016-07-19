@@ -1,0 +1,24 @@
+- name: restart kube-proxy
+  become: true
+  ignore_errors: true
+  service: name=kube-proxy state=restarted sleep=5
+  tags:
+    - sslworker
+
+- name: restart docker
+  become: true
+  service: name=docker state=restarted sleep=2
+  ignore_errors: true
+  tags:
+    - sslworker
+ 
+
+- name: restart kubelet
+  become: true
+  service: name=kubelet state=restarted sleep=5
+  ignore_errors: true
+  tags:
+    - sslworker
+
+
+

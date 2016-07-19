@@ -1,0 +1,20 @@
+- name: restart kube-apiserver
+  become: true
+  ignore_errors: true
+  service: name=kube-apiserver state=restarted
+  tags:
+    - sslctrl
+
+- name: restart kube-scheduler
+  become: true
+  ignore_errors: true
+  service: name=kube-scheduler state=restarted
+  tags:
+    - sslctrl
+
+- name: restart kube-controller-manager
+  become: true
+  ignore_errors: true
+  service: name=kube-controller-manager state=restarted
+  tags:
+    - sslctrl

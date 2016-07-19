@@ -1,7 +1,6 @@
-- name: Stop kubelet service
+- name: Create kubelet dir
   become: true
-  shell: "systemctl stop kubelet"
-  ignore_errors: yes
+  file: path=/var/lib/kubelet state=directory
   tags:
     - kubelet
 
@@ -14,23 +13,19 @@
   tags:
     - kubelet
 
-- name: Create kubernetes dir
-  become: true
-  file: path=/var/lib/kubelet state=directory
-  tags:
-    - kubelet
-
 - name: Copy over kubeconfig
   become: true
   template: src=../files/kubeconfig.j2 dest=/var/lib/kubelet/kubeconfig
   tags:
-    - kubelet 
+    - kubelet   
 
 - name: Copy over kubelet service config
   become: true
   template: src=../files/kubelet.service.j2 dest=/etc/systemd/system/kubelet.service
   tags:
     - kubelet
+  notify: 
+    - restart kubelet
 
 - stat: path=/etc/systemd/system/kubelet.service
   register: ks
@@ -47,33 +42,8 @@
 - name: Enable kubelet service
   become: true
   shell: "systemctl enable kubelet"
-  run_once: true
   tags:
     - kubelet
-
-- name: Copy kubernetes.pem to nodes
-  become: true
-  copy: src=../../../../ssl/kubernetes.pem dest=/var/lib/kubernetes/ mode=0644
-  notify: 
-    - restart kubelet
-  tags: 
-    - kubelet
-  
-- name: Copy kubernetes-key.pem to nodes
-  become: true
-  copy: src=../../../../ssl/kubernetes-key.pem dest=/var/lib/kubernetes/ mode=0644
-  notify: 
-    - restart kubelet
-  tags: 
-    - kubelet
-  
-- name: Copy ca.pem to nodes
-  copy: src=../../../../ssl/ca.pem dest=/var/lib/kubernetes/ mode=0644
-  become: true
-  notify: 
-    - restart kubelet
-  tags: 
-   - kubelet
 
 - name: Start kubelet
   become: true
@@ -84,15 +54,13 @@
 - name: Check Status
   become: true
   shell: systemctl status kubelet --no-pager
-  register: kubelet_status
+  register: kt_status
   ignore_errors: yes
-  when: "'worker' in group_names"
   tags:
     - debug
 
 - name: Cluster kubelet status
-  debug: msg={{ kubelet_status.stdout_lines }}
+  debug: msg={{ kt_status.stdout_lines }}
   ignore_errors: yes
-  when: "'worker' in group_names"
   tags:
     - debug

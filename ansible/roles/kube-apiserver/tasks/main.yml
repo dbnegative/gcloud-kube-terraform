@@ -1,10 +1,3 @@
-- name: Create kubernetes dir
-  become: true
-  file: path=/var/lib/kubernetes state=directory
-  tags:
-    - ssl
-    - kube-apiserver
-  
 - name: Download kube-apiserver binary
   become: true
   get_url: 
@@ -65,33 +58,8 @@
 - name: Enable kube-apiserver service
   become: true
   shell: "systemctl enable kube-apiserver"
-  run_once: true
   tags:
     - kube-apiserver  
-
-- name: Copy kubernetes.pem to nodes
-  become: true
-  copy: src=../../../../ssl/kubernetes.pem dest=/var/lib/kubernetes/ mode=0644
-  notify: 
-    - restart kube-apiserver
-  tags: 
-    - kube-apiserver
-  
-- name: Copy kubernetes-key.pem to nodes
-  become: true
-  copy: src=../../../../ssl/kubernetes-key.pem dest=/var/lib/kubernetes/ mode=0644
-  notify: 
-    - restart kube-apiserver
-  tags: 
-    - kube-apiserver
-  
-- name: Copy ca.pem to nodes
-  copy: src=../../../../ssl/ca.pem dest=/var/lib/kubernetes/ mode=0644
-  become: true
-  notify: 
-    - restart kube-apiserver
-  tags: 
-   - kube-apiserver
 
 - name: Start kube-apiserver
   become: true

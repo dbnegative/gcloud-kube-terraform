@@ -49,6 +49,7 @@ then
         echo "Running Terraform Apply\n----------"
         terraform apply
         rm -rf ../ssl/kubernetes.pem
+        rm -rf ../ssl/kubernetes-csr.json
     else
         echo "No Changes detected\n----------"
     fi    
@@ -194,6 +195,8 @@ sleep 10
 
 #Configure nodes
 echo "Starting Ansible\n----------"
+export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1 --tags sslworker
+export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1 --tags sslctrl
 export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1
 
 cd ..

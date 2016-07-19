@@ -27,7 +27,7 @@
   become: true
   template: src=../files/kube-controller-manager.service.j2 dest=/etc/systemd/system/kube-controller-manager.service 
   notify: 
-   - restart kube-controller-manager.service
+   - restart kube-controller-manager
   tags:
     - kube-controller
 
@@ -46,33 +46,8 @@
 - name: Enable kube-controller-manager service
   become: true
   shell: "systemctl enable kube-controller-manager"
-  run_once: true
   tags:
     - kube-controller
-
-- name: Copy kubernetes.pem to nodes
-  become: true
-  copy: src=../../../../ssl//kubernetes.pem dest=/var/lib/kubernetes/ mode=0644
-  notify: 
-    - restart kube-controller-manager
-  tags: 
-    - kube-controller-manager
-  
-- name: Copy kubernetes-key.pem to nodes
-  become: true
-  copy: src=../../../../ssl/kubernetes-key.pem dest=/var/lib/kubernetes/ mode=0644
-  notify: 
-    - restart kube-controller-manager
-  tags: 
-    - kube-controller-manager
-  
-- name: Copy ca.pem to nodes
-  copy: src=../../../../ssl/ca.pem dest=/var/lib/kubernetes/ mode=0644
-  become: true
-  notify: 
-    - restart kube-controller-manager
-  tags: 
-   - kube-controller-manager
 
 - name: Start kube-controller-manager
   become: true

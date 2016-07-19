@@ -12,6 +12,8 @@
   template: src=../files/kube-proxy.service.j2 dest=/etc/systemd/system/kube-proxy.service
   tags:
     - kube-proxy
+  notify: 
+    - restart kube-proxy
 
 - stat: path=/etc/systemd/system/kube-proxy.service
   register: kps
@@ -28,34 +30,8 @@
 - name: Enable kube-proxy service
   become: true
   shell: "systemctl enable kube-proxy"
-  run_once: true
   tags:
     - kube-proxy
-
-- name: Copy kubernetes.pem to nodes
-  become: true
-  copy: src=../../../../ssl/kubernetes.pem dest=/var/lib/kubernetes/ mode=0644
-  notify: 
-    - restart kube-proxy
-  tags: 
-    - kube-proxy
-  
-- name: Copy kubernetes-key.pem to nodes
-  become: true
-  copy: src=../../../../ssl/kubernetes-key.pem dest=/var/lib/kubernetes/ mode=0644
-  notify: 
-    - restart kube-proxy
-  tags: 
-    - kube-proxy
-  
-- name: Copy ca.pem to nodes
-  copy: src=../../../../ssl/ca.pem dest=/var/lib/kubernetes/ mode=0644
-  become: true
-  notify: 
-    - restart kube-proxy
-  tags: 
-   - kube-proxy
-
 
 - name: Start kube-proxy
   become: true
