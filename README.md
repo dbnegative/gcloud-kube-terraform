@@ -51,7 +51,7 @@ To display status of all running kube and etcd services, run this in the root of
 
 export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1 --tags debug
 
-``
+```
 
 ## ToDo:
 * ~~Wrapper script~~ 
