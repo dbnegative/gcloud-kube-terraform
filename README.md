@@ -2,6 +2,10 @@
  
 Automated provisioning of kubernetes based off https://github.com/kelseyhightower/kubernetes-the-hard-way
 
+## Why?
+
+Why do this when Google Compute already provides this service? Mostly to learn a bit more about GCE, Kubernetes components and bootstrap that would be necassery in other enviro's like AWS. 
+
 ## Currently builds the following:
 * GCE Network, Firewall rules, Instance pool etc..
 * 3 x ETCD nodes in seperate AZ's
@@ -10,9 +14,11 @@ Automated provisioning of kubernetes based off https://github.com/kelseyhightowe
 
 ## Requires the following: 
 * Terraform 7rc1 
-* Google Cloud SDK
-* Ansible
+* Google Cloud SDK: gcloud, gsutil
+* Functioning kubectl for your OS
+* Ansible v2.* 
 * Fully functioning service account creds
+* Unix tools: sed, wget
 
 ## Usage 
 * Put google service creds in folder as account.json
@@ -31,18 +37,31 @@ osx:
 
 linux:
 ./setup-osx.sh
+
+To teardown and cleanup OSX/Linux:
+./destroy.sh
 ```
+
+## Debugging
+
+All ansible roles are tagged so they can be run individually.
+
+```
+To display status of all running kube and etcd services, run this in the root of the folder:
+
+export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1 --tags debug
+
+``
 
 ## ToDo:
 * ~~Wrapper script~~ 
 * ~~Better SSL cert generation~~
 * ~~MD5 hash check on certs to reduce provisioning time.~~
-* Better Anisible module seperation i.e move ssl to own role
+* ~~Better Anisible module seperation i.e move ssl to own role ~~
 * Remove debug output
+* ~~Update linux setup script~~ Not tested yet
 * Code Tidy
-* Terraform state in GCS
-* CircleCi intergration
-* Terraform modules
+* ~~Terraform state in GCS~~
 * Better exposed variables
 
 Only tested on OSX
