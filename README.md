@@ -19,6 +19,7 @@ Why do this when Google Compute already provides this service? Mostly to learn a
 * Ansible v2.* 
 * Fully functioning service account creds
 * Unix tools: sed, wget
+* cfssl, cfssljson 
 
 ## Usage 
 * Put google service creds in folder as account.json
