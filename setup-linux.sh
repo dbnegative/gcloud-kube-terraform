@@ -2,6 +2,16 @@
 #Makes assumptions for many things such as terraform, ansible and cfssl being 
 #installed and located in PATH etc.. tread lightly
 
+
+#init
+if [ ! -d ansible/group_vars ]
+then
+    echo "Creating ansible/group_vars folder\n----------"
+    mkdir ansible/group_vars
+fi
+
+gsutil mb -l eu gs://terraform-remote-kube
+
 #Assumes ssl folder exists and contains ca config files
 cd ssl
 
@@ -10,19 +20,39 @@ if [ ! -f ca.pem ]
 then
 	echo "Generating CA\n----------"
 	cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+    UPDATEKUBECERT=1
 else
 	echo "CA exists..skipping\n----------"
 fi
 
-cd ..
+cd ../terraform
 
 #Check if credentials exist then run Terraform
-if [ -f account.json ]
+if [ -f ../creds/account.json ]
 then
+    #set remote state
+    terraform remote config \
+    -backend=gcs \
+    -backend-config="bucket=terraform-remote-kube" \
+    -backend-config="path=main/terraform.tfstate" \
+    -backend-config="project=kubernetes"
+
+    #Check what changes Terraform will make if any..
 	echo "Running Terraform Plan\n----------"
 	terraform plan > plannedchanges.log
-    echo "Running Terraform Apply\n----------"
-  terraform apply
+
+    #Check if anything has changed - not a great way to do this but since the resource order varies in 
+    #terraform plan we cannot use a hash     
+    grep "No changes. Infrastructure is up-to-date" plannedchanges.log > /dev/null
+    if [  $? -ne 0 ]
+    then
+        echo "Running Terraform Apply\n----------"
+        terraform apply
+        rm -rf ../ssl/kubernetes.pem
+        rm -rf ../ssl/kubernetes-csr.json
+    else
+        echo "No Changes detected\n----------"
+    fi    
 else
 	echo "Google service credentials missing, cannot find account.json"
     exit
@@ -41,10 +71,10 @@ KUBERNETES_PUBLIC_IP_ADDRESS=$(gcloud compute addresses describe kubernetes \
   --format 'value(address)')
 
 # cd to working dir
-cd ssl 
+cd ../ssl 
 
 # copy over template
-if [ ! -f kubernetes-csr.json ]
+if [ ! -f kubernetes-csr.json ] || [ "$UPDATEKUBECERT" == 1  ]
 then
     cp kubernetes-csr.json.tmpl kubernetes-csr.json
 fi
@@ -64,7 +94,7 @@ NEWHASH=`md5sum kubernetes-csr.json|cut -c 1-32`
 echo "NEWHASH: $NEWHASH"
 
 #Generate kube cert
-if [  "$OLDHASH" != "$NEWHASH" ]
+if [ "$OLDHASH" != "$NEWHASH" ] || [ ! -f kubernetes.pem ] || [ "$UPDATEKUBECERT" == 1  ]
 then
     echo "Generatining kubernetes cert and key"
     cfssl gencert \
@@ -84,11 +114,6 @@ then
     #Copy template file
     cp templates/gcehosts.tmpl gcehosts
 
-    #Copy over ssl certs to be provisioned
-    cp ../ssl/kubernetes.pem roles/common/files/
-    cp ../ssl/kubernetes-key.pem roles/common/files/
-    cp ../ssl/ca.pem roles/common/files/
-
     #Get Nat IP's of all hosts
     echo "Collecting node IP's from gcloud\n----------"
     ETCD0_NAT_IP=`gcloud compute instances list etcd0 --format=yaml | grep "  natIP:" | cut -c 12-100`
@@ -106,30 +131,27 @@ then
     sed -i "s/WORKER0IP/${WORKER0_NAT_IP}/g; s/WORKER1IP/${WORKER1_NAT_IP}/g" gcehosts
 fi
 
-#Apply only if hash is different or var file is missing
-if [ "$OLDHASH" != "$NEWHASH" ] || [ ! -f group_vars/all ]
-then
-    #Export IP's' to vars file
-    echo "Exporting IP's to Ansible vars\n----------"
-    echo "
-    etcd:
-        etcd0: $ETCD0_IP
-        etcd1: $ETCD1_IP
-        etcd2: $ETCD2_IP
+#Export IP's' to vars file, this file is kept inline due to easy of setting vars without too much sed
+echo "Exporting IP's to Ansible vars\n----------"
+echo "
+etcd:
+    etcd0: $ETCD0_IP
+    etcd1: $ETCD1_IP
+    etcd2: $ETCD2_IP
 
-    ctrl:
-        ctrl0: $CTRL0_IP
-        ctrl1: $CTRL1_IP
-        ctrl2: $CTRL2_IP
+ctrl:
+    ctrl0: $CTRL0_IP
+    ctrl1: $CTRL1_IP
+    ctrl2: $CTRL2_IP
 
-    worker:
-        worker0: $WORKER0_IP
-        worker1: $WORKER1_IP
+worker:
+    worker0: $WORKER0_IP
+    worker1: $WORKER1_IP
 
-    ansible_connection: ssh 
-    ansible_ssh_user: shortjay
-    " > group_vars/all
-fi
+ansible_connection: ssh 
+ansible_ssh_user: shortjay
+" > group_vars/all
+
 
 #Wait for nodes to be ready
 echo "Sleeping 10s, waiting for nodes to be ready\n----------"
@@ -137,11 +159,109 @@ sleep 10
 
 #Configure nodes
 echo "Starting Ansible\n----------"
-export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1
-
-#clean up
-#TODO: clean up other files etc
-if [ $? -eq 0 ]
+export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1 --tags sslworker
+if [ $? -gt 0 ]
 then
-    rm -rf group_vars/all
+    echo "Ansible Failed to provsion SSL worker"
+    exit
 fi
+export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1 --tags sslctrl
+if [ $? -gt 0 ]
+then
+    echo "Ansible Failed to provsion SSL ctrl"
+    exit
+fi
+export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml --private-key ~/.ssh/google_compute_1
+if [ $? -gt 0 ]
+then
+    echo "Ansible Failed to provsion main playbook"
+    exit
+fi
+
+cd ..
+#Setup local kubectl client
+if [ ! -f /usr/local/bin/kubectl ]
+ then
+        wget https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/darwin/amd64/kubectl
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin
+fi
+
+kubectl config set-cluster kubernetes \
+--certificate-authority=ssl/ca.pem \
+--embed-certs=true \
+--server=https://${KUBERNETES_PUBLIC_IP_ADDRESS}:6443
+
+kubectl config set-credentials admin --token chAng3m3
+
+kubectl config set-context default-context \
+--cluster=kubernetes \
+--user=admin
+
+kubectl config use-context default-context
+
+#Print status
+kubectl get componentstatuses
+if [ $? -gt 0 ]
+then    
+    echo "Could not connect to API"
+    exit
+fi
+
+#----------------------------------------
+OUTPUT=`kubectl get nodes --output=jsonpath='{range .items[*]}{.status.addresses[?(@.type=="InternalIP")].address} {.spec.podCIDR} {"\n"}{end}'`
+
+IP1=`echo "$OUTPUT"|cut -d " " -f1|awk 'NR==1{print $1}'`
+IP2=`echo "$OUTPUT"|cut -d " " -f1|awk 'NR==2{print $1}'`
+DESTNET1=`echo "$OUTPUT"|cut -d " " -f2|awk 'NR==1{print $1}'|cut -d "/" -f1`
+DESTNET2=`echo "$OUTPUT"|cut -d " " -f2|awk 'NR==2{print $1}'|cut -d "/" -f1`
+
+cd terraform-routes
+cp routes.tf.tmpl routes.tf
+sed -i "s/IP1/${IP1}/g; s/IP2/${IP2}/g" routes.tf
+sed -i "s/DESTNET1/${DESTNET1}/g; s/DESTNET2/${DESTNET2}/g" routes.tf
+
+
+echo "Creating routes\n----------"
+if [ -f ../creds/account.json ]
+then
+
+    #set remote state
+    terraform remote config \
+    -backend=gcs \
+    -backend-config="bucket=terraform-remote-kube" \
+    -backend-config="path=routes/terraform.tfstate" \
+    -backend-config="project=kubernetes"
+
+    #Check what changes Terraform will make if any..
+	echo "Running Terraform Plan\n----------"
+	terraform plan > plannedchanges.log
+
+    #Check if anything has changed - not a great way to do this but since the resource order varies in 
+    #terraform plan we cannot use a hash     
+    grep "No changes. Infrastructure is up-to-date" plannedchanges.log > /dev/null
+    if [  $? -ne 0 ]
+    then
+        echo "Running Terraform Apply\n----------"
+        terraform apply
+   else
+        echo "No Changes detected\n----------"
+    fi    
+else
+	echo "Google service credentials missing, cannot find account.json"
+    exit
+fi
+
+#Assuming everything has worked provision skydns
+
+echo "Sleeping 15s to wait for Kube to settle.."
+sleep 15
+kubectl create -f https://raw.githubusercontent.com/kelseyhightower/kubernetes-the-hard-way/master/skydns-svc.yaml
+kubectl create -f https://raw.githubusercontent.com/kelseyhightower/kubernetes-the-hard-way/master/skydns-rc.yaml
+
+#Install the webdashboard
+echo "sleeping 30s waiting for KubeDNS to be ready"
+sleep 30
+kubectl create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml
+
+kubectl get pods --namespace=kube-system
