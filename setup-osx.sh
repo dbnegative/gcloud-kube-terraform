@@ -70,41 +70,6 @@ WORKER1_IP=`gcloud compute instances list worker1 --format=yaml | grep "  networ
 KUBERNETES_PUBLIC_IP_ADDRESS=$(gcloud compute addresses describe kubernetes \
   --format 'value(address)')
 
-#-------------------------------------------------------------------------------------------------------------------------------
-#Create routes seperate
-#cd ../terraform-routes
-#cp routes.tf.tmpl routes.tf
-#sed -i ""  "s/WORKER0IP/${WORKER0_IP}/g; s/WORKER1IP/${WORKER1_IP}/g" routes.tf
-
-#echo "Creating routes\n----------"
-#if [ -f ../creds/account.json ]
-#then
-    #set remote state
-#    terraform remote config \
-#    -backend=gcs \
-#    -backend-config="bucket=terraform-remote-kube" \
-#    -backend-config="path=routes/terraform.tfstate" \
-#    -backend-config="project=kubernetes"
-
-    #Check what changes Terraform will make if any..
-#	echo "Running Terraform Plan\n----------"
-#	terraform plan > plannedchanges.log
-
-    #Check if anything has changed - not a great way to do this but since the resource order varies in 
-    #terraform plan we cannot use a hash     
-#    grep "No changes. Infrastructure is up-to-date" plannedchanges.log > /dev/null
-#    if [  $? -ne 0 ]
-#    then
-#        echo "Running Terraform Apply\n----------"
-#        terraform apply
-#   else
-#        echo "No Changes detected\n----------"
-#    fi    
-#else
-#	echo "Google service credentials missing, cannot find account.json"
-#    exit
-#fi
-#------------------------------------------------------------------------------------------------------------------------------
 # cd to working dir
 cd ../ssl 
 
