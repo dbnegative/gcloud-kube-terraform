@@ -27,9 +27,9 @@ Why do this when Google Compute already provides this service? Mostly to learn a
 * You have an ssh key generated called "google_compute_1" in your ssh folder 
 * Make sure that key has been added to your project metadata
 
-Do the follwing in the root of the folder
+###Do the follwing in the root of the folder:
 ```
-all:
+All os's:
 mkdir creds
 cp <YOUR GOOGLE SERVICE ACCOUNT CREDS JSON> creds/account.json
 
@@ -58,7 +58,7 @@ export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml 
 * ~~Wrapper script~~ 
 * ~~Better SSL cert generation~~
 * ~~MD5 hash check on certs to reduce provisioning time.~~
-* ~~Better Anisible module seperation i.e move ssl to own role ~~
+* ~~Better Anisible module seperation i.e move ssl to own role~~
 * Remove debug output
 * ~~Update linux setup script~~ Not tested yet
 * Code Tidy
