@@ -16,8 +16,11 @@ variable "network" {
     }
 }
 variable "instance-type" {
-    type = "string"
-    default = "n1-standard-1"
+    type = "map"
+    default = {
+        worker = "n1-standard-1"
+        controller = "g1-small"
+        etcd = "g1-small"
 }
 
 variable "az" {
