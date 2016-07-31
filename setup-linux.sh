@@ -178,8 +178,10 @@ fi
 
 cd ..
 #Setup local kubectl client
+echo -e "Installing kubectl\n----------"
 gcloud components install kubectl
 
+echo -e "Configuring kubectl\n----------"
 kubectl config set-cluster kubernetes \
 --certificate-authority=ssl/ca.pem \
 --embed-certs=true \
@@ -194,6 +196,7 @@ kubectl config set-context default-context \
 kubectl config use-context default-context
 
 #Print status
+echo -e "Checking cluster status\n----------"
 kubectl get componentstatuses
 if [ $? -gt 0 ]
 then    
