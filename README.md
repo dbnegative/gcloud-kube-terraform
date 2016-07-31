@@ -8,15 +8,15 @@ Why do this when Google Compute already provides this service? Mostly to learn a
 
 ## Currently builds the following:
 * GCE Network, Firewall rules, Instance pool etc..
-* 3 x ETCD nodes in seperate AZ's
-* 3 x Controller/API nodes 
-* 2 x Worker nodes (due to free account instance limit of 8)
+* 3 x ETCD nodes in seperate AZ's - g1-small machine
+* 3 x Controller/API nodes - g1-small 
+* 2 x Worker nodes (due to free account instance limit of 8) n1-standard-1
 
 ## Requires the following: 
-* Terraform 7rc1 
-* Google Cloud SDK: gcloud, gsutil
+* Terraform v7rc1 >
+* Google Cloud SDK: gcloud, gsutil 
 * Functioning kubectl for your OS
-* Ansible v2.* 
+* Ansible v2.0 > 
 * Fully functioning service account creds
 * Unix tools: sed, wget
 * cfssl, cfssljson 
@@ -64,5 +64,3 @@ export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook -i gcehosts site.yml 
 * Code Tidy
 * ~~Terraform state in GCS~~
 * Better exposed variables
-
-Only tested on OSX
