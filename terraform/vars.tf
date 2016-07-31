@@ -21,8 +21,8 @@ variable "instance-type" {
         worker = "n1-standard-1"
         controller = "g1-small"
         etcd = "g1-small"
+    }
 }
-
 variable "az" {
     type = "list"
     default = ["b", "c", "d"]    
