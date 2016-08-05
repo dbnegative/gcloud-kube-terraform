@@ -32,14 +32,28 @@ Why do this when Google Compute already provides this service? Mostly to learn a
 All os's:
 mkdir creds
 cp <YOUR GOOGLE SERVICE ACCOUNT CREDS JSON> creds/account.json
+```
 
-osx:
-./setup-osx.sh
+Edit terraform/vars.tf and terraform-routes/vars.tf:
 
-linux:
+```
+variable "project" {
+    type = "string"
+    default = "<YOUR PROJECT ID>"
+}
+```
+
+###OSX:
+```
 ./setup-osx.sh
+```
+###Linux:
+```
+./setup-osx.sh
+```
 
 To teardown and cleanup OSX/Linux:
+```
 ./destroy.sh
 ```
 
